@@ -1,22 +1,27 @@
+import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import AppLayout from '@/components/layout/AppLayout'
-import RequiereAdmin from '@/components/layout/RequiereAdmin'
+import RequiereVeTodo from '@/components/layout/RequiereVeTodo'
+import { Cargando } from '@/components/ui/estado'
+import Clientes from '@/pages/Clientes'
+import Informes from '@/pages/Informes'
 import Inicio from '@/pages/Inicio'
 import Login from '@/pages/Login'
 import NoEncontrado from '@/pages/NoEncontrado'
+import Pedidos from '@/pages/Pedidos'
 import Usuarios from '@/pages/Usuarios'
+
+// Reportes arrastra graficos y librerias de exportacion, y lo usan pocas
+// personas: se carga recien al entrar, para no penalizar el login.
+const Reportes = lazy(() => import('@/pages/Reportes'))
 
 /**
  * Dos zonas:
  *   /login   — publica
  *   /        — la app, dentro de AppLayout (exige sesion activa)
  *
- * Las pantallas de una app construida sobre esta base se agregan como rutas
- * hijas de AppLayout. Las que sean solo para administradores van dentro de
- * <RequiereAdmin>, igual que /usuarios.
- *
- * Si alguna pantalla pesa mucho (un visor de PDF, un editor), conviene
- * cargarla con React.lazy + <Suspense> para no penalizar el login.
+ * Las secciones con sub-pestanas (Pedidos, Informes, Clientes) resuelven su
+ * propia sub-ruta adentro (`/pedidos/*`), por eso el `/*`.
  */
 export default function App() {
   return (
@@ -25,7 +30,18 @@ export default function App() {
 
       <Route path="/" element={<AppLayout />}>
         <Route index element={<Inicio />} />
-        <Route element={<RequiereAdmin />}>
+        <Route path="pedidos/*" element={<Pedidos />} />
+        <Route path="informes/*" element={<Informes />} />
+        <Route path="clientes/*" element={<Clientes />} />
+        <Route element={<RequiereVeTodo />}>
+          <Route
+            path="reportes"
+            element={
+              <Suspense fallback={<Cargando />}>
+                <Reportes />
+              </Suspense>
+            }
+          />
           <Route path="usuarios" element={<Usuarios />} />
         </Route>
       </Route>

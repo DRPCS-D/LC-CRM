@@ -13,7 +13,7 @@ export default function Login() {
   const { user, loading, signIn } = useAuth()
   const navigate = useNavigate()
 
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
@@ -27,7 +27,7 @@ export default function Login() {
     if (enviando) return
     setError(null)
     setEnviando(true)
-    const { error: err } = await signIn(email, password)
+    const { error: err } = await signIn(username, password)
     setEnviando(false)
     if (err) setError(err)
     else navigate('/', { replace: true })
@@ -43,7 +43,7 @@ export default function Login() {
         <div className="mb-7 text-center">
           <img src="/logo.svg" alt="" className="mx-auto mb-3 size-12" />
           <h1 className="text-lg font-semibold text-foreground">{APP_NOMBRE}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Ingresa con tu cuenta</p>
+          <p className="mt-1 text-sm text-muted-foreground">LA COSTA S.R.L.</p>
         </div>
 
         {!isSupabaseConfigured && (
@@ -56,13 +56,15 @@ export default function Login() {
           onSubmit={onSubmit}
           className="space-y-4 rounded-lg border border-border bg-card p-6 shadow-xs"
         >
-          <Field label="Email">
+          <Field label="Usuario">
             <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="vos@ejemplo.com"
-              autoComplete="email"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="tu usuario"
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               required
               autoFocus
             />

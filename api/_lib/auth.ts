@@ -1,10 +1,11 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { error, type ApiRequest, type ApiResponse } from './http.js'
 
-export type Rol = 'admin' | 'usuario'
+export type Rol = 'admin' | 'supervisor' | 'vendedor'
 
 export interface PerfilServidor {
   id: string
+  username: string
   nombre: string
   email: string
   rol: Rol
@@ -51,7 +52,7 @@ export async function usuarioAutenticado(req: ApiRequest): Promise<PerfilServido
 
   const { data: perfil } = await admin
     .from('usuarios')
-    .select('id, nombre, email, rol, activo')
+    .select('id, username, nombre, email, rol, activo')
     .eq('id', data.user.id)
     .maybeSingle()
 

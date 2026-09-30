@@ -9,7 +9,7 @@ import { conManejoDeErrores, error, exigeMetodo, leerBody, type ApiHandler } fro
  * manipule la request.
  */
 
-const LARGO_MINIMO_PASSWORD = 8
+const LARGO_MINIMO_PASSWORD = 6
 
 interface Body {
   password?: string

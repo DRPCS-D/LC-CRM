@@ -1,8 +1,8 @@
 {
   "$comentario": "Identidad de la app. Cambiar esto (mas el 'name' de package.json) rebrandea la app entera: titulo, manifest de la PWA, cabecera, login e iconos. No hay ningun otro archivo que tocar a mano. Ver README → 'Empezar una app nueva'.",
-  "nombre": "App Base",
-  "descripcion": "Base para construir aplicaciones: login, usuarios, roles, tema e interfaz.",
-  "colorPrimario": "#1659b5",
-  "colorFondo": "#f9fafb",
+  "nombre": "LC CRM",
+  "descripcion": "LA COSTA S.R.L. — pedidos con extraccion automatica, visitas a clientes y reportes.",
+  "colorPrimario": "#8A1B1A",
+  "colorFondo": "#f8fafc",
   "idioma": "es"
 }

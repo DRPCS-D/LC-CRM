@@ -50,14 +50,14 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.21 0.02 255);
 
-  --primary: oklch(0.48 0.16 258);
+  --primary: oklch(0.42 0.14 25);
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.96 0.005 250);
   --secondary-foreground: oklch(0.28 0.02 255);
   --muted: oklch(0.96 0.005 250);
   --muted-foreground: oklch(0.52 0.015 255);
-  --accent: oklch(0.94 0.015 258);
-  --accent-foreground: oklch(0.3 0.04 258);
+  --accent: oklch(0.95 0.015 25);
+  --accent-foreground: oklch(0.32 0.06 25);
 
   --destructive: oklch(0.56 0.2 25);
   --destructive-foreground: oklch(0.99 0 0);
@@ -68,7 +68,7 @@
 
   --border: oklch(0.9 0.006 255);
   --input: oklch(0.9 0.006 255);
-  --ring: oklch(0.48 0.16 258);
+  --ring: oklch(0.42 0.14 25);
 
   color-scheme: light;
 }
@@ -81,8 +81,8 @@
   --popover: oklch(0.22 0.018 258);
   --popover-foreground: oklch(0.95 0.005 250);
 
-  --primary: oklch(0.66 0.15 258);
-  --primary-foreground: oklch(0.15 0.02 258);
+  --primary: oklch(0.66 0.15 22);
+  --primary-foreground: oklch(0.15 0.02 22);
   --secondary: oklch(0.27 0.02 258);
   --secondary-foreground: oklch(0.95 0.005 250);
   --muted: oklch(0.27 0.02 258);
@@ -99,7 +99,7 @@
 
   --border: oklch(0.32 0.02 258);
   --input: oklch(0.32 0.02 258);
-  --ring: oklch(0.66 0.15 258);
+  --ring: oklch(0.66 0.15 22);
 
   color-scheme: dark;
 }
@@ -124,5 +124,113 @@
   /* Los codigos, importes y RUC se leen mejor con cifras de ancho fijo */
   .tabular {
     font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ── Mapas (src/components/Mapa.tsx) ─────────────────────────── */
+.leaflet-container {
+  font-family: var(--font-sans);
+}
+.leaflet-popup-content {
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 10px 14px;
+}
+.leaflet-popup-content a.mapa-boton {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #8a1b1a;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+}
+.mapa-pin {
+  width: 26px;
+  height: 26px;
+  border-radius: 50% 50% 50% 0;
+  background: #8a1b1a;
+  border: 3px solid #fff;
+  transform: rotate(-45deg);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+}
+.mapa-avatar {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  border: 2.5px solid #fff;
+  background: #8a1b1a;
+  color: #fff;
+  box-shadow: 0 1px 5px rgb(0 0 0 / 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+.mapa-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  object-fit: cover;
+}
+.mapa-avatar-varios {
+  background: #475569;
+}
+.mapa-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 20px;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+  border: 2px solid #fff;
+}
+.mapa-cluster {
+  width: 38px;
+  height: 38px;
+  border-radius: 9999px;
+  background: rgb(138 27 26 / 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mapa-cluster span {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #8a1b1a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Impresion del reporte (window.print) ─────────────────────── */
+#area-impresion {
+  display: none;
+}
+@media print {
+  body > #root {
+    display: none !important;
+  }
+  #area-impresion {
+    display: block !important;
+    color: #000;
+    background: #fff;
+    font-size: 11px;
+  }
+  @page {
+    size: A4;
+    margin: 12mm;
   }
 }

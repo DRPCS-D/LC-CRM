@@ -10,7 +10,9 @@ import {
   type ReactNode,
 } from 'react'
 import type { Rol, Usuario } from '@/lib/database.types'
+import { resetearRecursos } from '@/lib/recurso'
 import { supabase } from '@/lib/supabase'
+import { emailDeUsername } from '@/lib/usuario'
 
 interface AuthState {
   session: Session | null
@@ -18,8 +20,10 @@ interface AuthState {
   /** Fila de `usuarios`: el perfil. `null` mientras carga o si no existe. */
   usuario: Usuario | null
   rol: Rol | null
-  /** Conveniencia: `rol === 'admin'`. Es lo que decide que se ve en la UI. */
+  /** Conveniencia: `rol === 'admin'`. Puede editar y borrar. */
   esAdmin: boolean
+  /** Admin o supervisor: ve los datos de todos (el vendedor, solo los suyos). */
+  veTodo: boolean
   loading: boolean
   /**
    * Hay sesion valida pero algo impide usar la app:
@@ -29,7 +33,7 @@ interface AuthState {
    * Sin esto, la pantalla queda en blanco en vez de explicar por que.
    */
   problemaPerfil: 'sin-perfil' | 'inactivo' | null
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>
+  signIn: (username: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   refrescarPerfil: () => Promise<void>
 }
@@ -114,6 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const idNuevo = nuevaSesion?.user?.id
       if (idNuevo === usuarioIdAnterior.current) return
       usuarioIdAnterior.current = idNuevo
+      // Otra persona (o nadie): lo cacheado era de la cuenta anterior.
+      resetearRecursos()
 
       setLoading(true)
       const vigente = await cargarPerfil(idNuevo)
@@ -126,9 +132,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [cargarPerfil])
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signIn = useCallback(async (username: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+      email: emailDeUsername(username),
       password,
     })
     // No se expone el mensaje crudo de Supabase: filtra si el email existe o no
@@ -136,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const esCredencial = /invalid login|credentials/i.test(error.message)
       return {
         error: esCredencial
-          ? 'Email o contrasena incorrectos.'
+          ? 'Usuario o contrasena incorrectos.'
           : 'No se pudo iniciar sesion. Intentalo de nuevo.',
       }
     }
@@ -145,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
+    resetearRecursos()
     setUsuario(null)
     setProblemaPerfil(null)
   }, [])
@@ -164,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       usuario,
       rol,
       esAdmin: rol === 'admin',
+      veTodo: rol === 'admin' || rol === 'supervisor',
       loading,
       problemaPerfil,
       signIn,

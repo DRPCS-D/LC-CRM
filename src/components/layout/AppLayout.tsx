@@ -1,7 +1,17 @@
-import { KeyRound, LogOut } from 'lucide-react'
+import {
+  BarChart3,
+  ClipboardList,
+  House,
+  KeyRound,
+  LogOut,
+  MapPinned,
+  Store,
+  Users,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { CambiarMiPasswordModal } from '@/components/cuenta/CambiarMiPasswordModal'
+import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Cargando } from '@/components/ui/estado'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
@@ -11,13 +21,17 @@ import { ROL_LABEL } from '@/lib/database.types'
 import { cn } from '@/lib/utils'
 
 /**
- * Los links de la barra. Una app hecha sobre esta base agrega los suyos aca
- * (y la ruta correspondiente en App.tsx): `soloAdmin` decide si aparece,
- * pero quien protege los datos es la RLS, no esta lista.
+ * Los links de la barra (y de la barra inferior en mobile). `veTodo` decide
+ * si aparece para admin/supervisor solamente, pero quien protege los datos
+ * es la RLS, no esta lista.
  */
 const NAV = [
-  { to: '/', label: 'Inicio', end: true, soloAdmin: false },
-  { to: '/usuarios', label: 'Usuarios', end: false, soloAdmin: true },
+  { to: '/', label: 'Inicio', end: true, veTodo: false, icono: House },
+  { to: '/pedidos', label: 'Pedidos', end: false, veTodo: false, icono: ClipboardList },
+  { to: '/informes', label: 'Informes', end: false, veTodo: false, icono: MapPinned },
+  { to: '/clientes', label: 'Clientes', end: false, veTodo: false, icono: Store },
+  { to: '/reportes', label: 'Reportes', end: false, veTodo: true, icono: BarChart3 },
+  { to: '/usuarios', label: 'Usuarios', end: false, veTodo: true, icono: Users },
 ]
 
 const MENSAJE_PROBLEMA = {
@@ -32,11 +46,11 @@ const MENSAJE_PROBLEMA = {
 } as const
 
 export default function AppLayout() {
-  const { user, usuario, rol, esAdmin, loading, problemaPerfil, signOut } = useAuth()
+  const { user, usuario, rol, veTodo, loading, problemaPerfil, signOut } = useAuth()
   const navigate = useNavigate()
   const [modalPassword, setModalPassword] = useState(false)
 
-  const links = NAV.filter((item) => !item.soloAdmin || esAdmin)
+  const links = NAV.filter((item) => !item.veTodo || veTodo)
 
   useEffect(() => {
     if (!loading && !user) navigate('/login', { replace: true })
@@ -71,7 +85,7 @@ export default function AppLayout() {
             <span className="truncate text-sm font-semibold text-foreground">{APP_NOMBRE}</span>
           </span>
 
-          <nav className="ml-2 hidden items-center gap-1 sm:flex">
+          <nav className="ml-2 hidden items-center gap-1 md:flex">
             {links.map((item) => (
               <NavLink
                 key={item.to}
@@ -92,12 +106,13 @@ export default function AppLayout() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
-            <div className="hidden text-right sm:block">
-              <p className="text-xs font-medium text-foreground">{usuario?.nombre}</p>
-              <p className="text-[11px] text-muted-foreground">
-                {rol ? ROL_LABEL[rol] : usuario?.email}
-              </p>
+            <div className="hidden text-right md:block">
+              <p className="text-xs font-medium text-foreground">{usuario?.username}</p>
+              <p className="text-[11px] text-muted-foreground">{rol ? ROL_LABEL[rol] : ''}</p>
             </div>
+            {usuario && (
+              <Avatar nombre={usuario.username} fotoPath={usuario.foto_path} className="hidden sm:inline-flex" />
+            )}
             <ThemeToggle />
             <Button variant="ghost" size="icon" onClick={() => setModalPassword(true)} title="Cambiar mi contrasena">
               <KeyRound />
@@ -108,31 +123,34 @@ export default function AppLayout() {
           </div>
         </div>
 
-        {/* Navegacion en mobile: la fila de arriba se queda sin lugar */}
-        <nav className="flex items-center gap-1 overflow-x-auto border-t border-border px-4 py-1.5 sm:hidden">
-          {links.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                cn(
-                  'shrink-0 rounded-md px-3 py-1.5 text-sm',
-                  isActive
-                    ? 'bg-accent font-medium text-accent-foreground'
-                    : 'text-muted-foreground',
-                )
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto max-w-7xl px-4 pb-24 pt-5 sm:px-6 md:pb-10 md:pt-8">
         <Outlet />
       </main>
+
+      {/* Navegacion en mobile: barra fija abajo, al alcance del pulgar */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-card/95 backdrop-blur md:hidden"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        {links.map(({ to, label, end, icono: Icono }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) =>
+              cn(
+                'flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[10.5px]',
+                isActive ? 'font-medium text-primary' : 'text-muted-foreground',
+              )
+            }
+          >
+            <Icono className="size-5" />
+            <span className="truncate">{label}</span>
+          </NavLink>
+        ))}
+      </nav>
 
       <CambiarMiPasswordModal abierto={modalPassword} onCerrar={() => setModalPassword(false)} />
     </div>

@@ -13,13 +13,13 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 
 const { colorPrimario: PRIMARY } = JSON.parse(readFileSync('app.config.json', 'utf-8'))
 
-// glyph: tres barras apiladas, de la mas ancha abajo a la mas angosta
-// arriba. Coordenadas pensadas para un viewBox de 100x100, con el contenido
-// dentro del 80% central para respetar el "safe zone" de los iconos maskable.
+// glyph: las iniciales "LC" (LA COSTA) en blanco. Coordenadas pensadas
+// para un viewBox de 100x100, con el contenido dentro del 80% central para
+// respetar el "safe zone" de los iconos maskable. Van como trazos y no como
+// <text> para no depender de las fuentes instaladas donde se corra.
 const GLYPH = `
-  <rect x="24" y="58" width="52" height="10" rx="5" fill="#ffffff"/>
-  <rect x="28" y="44" width="44" height="10" rx="5" fill="#ffffff" opacity="0.85"/>
-  <rect x="32" y="30" width="36" height="10" rx="5" fill="#ffffff" opacity="0.7"/>
+  <path d="M24 30 v40 h22" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M78 36 a17 17 0 1 0 0 28" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" opacity="0.9"/>
 `.trim()
 
 function svg({ rounded }) {

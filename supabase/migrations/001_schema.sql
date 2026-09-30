@@ -1,16 +1,19 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 001_schema.sql — Esquema base
 --
---   auth.users ── usuarios (nombre, email, rol, activo)
+--   auth.users ── usuarios (username, nombre, email, rol, activo, foto)
 --
--- Una sola tabla propia: el perfil de la persona, colgado de `auth.users`.
--- El rol es GLOBAL y tiene dos valores, 'admin' y 'usuario': no hay niveles
--- intermedios ni roles por seccion. Si una app construida sobre esta base
--- necesita permisos mas finos, lo natural es agregar una tabla de permisos
--- aparte antes que meter mas valores en `rol`.
+-- El perfil de la persona, colgado de `auth.users`. El rol es GLOBAL y tiene
+-- tres valores (los mismos tres de la app de Apps Script original):
+--   · admin      — todo (antes "Admin").
+--   · supervisor — ve todo, no edita ni borra (antes "AdminL").
+--   · vendedor   — carga y ve solo lo suyo (antes "User").
 --
--- Las tablas propias de cada app se agregan en migraciones nuevas (004_…),
--- siguiendo el patron de policy documentado en 002_rls.sql y en el README.
+-- Se inicia sesion con `username`, no con email: el email de Auth es uno
+-- interno, `<username>@lc-crm.local`, que nadie tiene que conocer. Lo arma
+-- /api/admin/usuarios al crear la cuenta y el Login al ingresar.
+--
+-- Las tablas del dominio (clientes, pedidos, informes) estan en 004_dominio.sql.
 -- ═══════════════════════════════════════════════════════════════════════════
 
 -- ─────────────────────────────────────────────────────────────
@@ -40,10 +43,15 @@ $$;
 -- ─────────────────────────────────────────────────────────────
 create table if not exists usuarios (
   id uuid primary key references auth.users (id) on delete cascade,
+  -- Lo que se escribe en el login. Minusculas, sin espacios.
+  username text not null check (username ~ '^[a-z0-9._-]{3,40}$'),
   nombre text not null,
+  -- Email INTERNO de Auth (`<username>@lc-crm.local`). Ver arriba.
   email text not null,
-  rol text not null default 'usuario' check (rol in ('admin', 'usuario')),
+  rol text not null default 'vendedor' check (rol in ('admin', 'supervisor', 'vendedor')),
   activo boolean not null default true,
+  -- Ruta del avatar en el bucket publico `avatares` (005_storage.sql).
+  foto_path text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -51,6 +59,7 @@ create table if not exists usuarios (
 -- El email identifica la cuenta: dos perfiles con el mismo email dejarian
 -- sin resolver a cual corresponde el login.
 create unique index if not exists usuarios_email_idx on usuarios (lower(email));
+create unique index if not exists usuarios_username_idx on usuarios (username);
 
 drop trigger if exists usuarios_updated_at on usuarios;
 create trigger usuarios_updated_at

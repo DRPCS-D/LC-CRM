@@ -1,11 +1,13 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 -- 002_rls.sql — Permisos
 --
--- Dos niveles, los dos globales:
---   · admin   — gestiona a todas las personas del sistema: da de alta, edita
---     nombre/email, cambia contrasenas, asigna el rol y activa/desactiva
---     cuentas. Es el nivel maximo: no hay nadie por encima.
---   · usuario — usa la app. De `usuarios` solo ve su propia fila.
+-- Tres niveles, los tres globales:
+--   · admin      — gestiona a todas las personas del sistema: da de alta,
+--     edita, cambia contrasenas, asigna el rol y activa/desactiva cuentas.
+--     Es el nivel maximo: no hay nadie por encima.
+--   · supervisor — ve a todas las personas (y todos los datos del dominio),
+--     pero no modifica nada.
+--   · vendedor   — usa la app. De `usuarios` solo ve su propia fila.
 --
 -- Lo unico que un admin NO puede hacer es sacarse a si mismo: ni bajarse a
 -- 'usuario' ni desactivarse. Es la red que evita quedarse sin ningun admin
@@ -52,22 +54,36 @@ language sql stable security definer set search_path = public as $$
   select coalesce((select activo from usuarios where id = (select auth.uid())), false)
 $$;
 
+-- ¿Quien llama puede VER todo (admin o supervisor, activo)? Es lo que
+-- separa a un vendedor, que solo ve lo suyo, del resto.
+create or replace function private.ve_todo()
+returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce(
+    (select rol in ('admin', 'supervisor') and activo from usuarios where id = (select auth.uid())),
+    false
+  )
+$$;
+
 revoke execute on function private.es_admin() from public, anon;
 revoke execute on function private.esta_activo() from public, anon;
+revoke execute on function private.ve_todo() from public, anon;
 grant execute on function private.es_admin() to authenticated;
 grant execute on function private.esta_activo() to authenticated;
+grant execute on function private.ve_todo() to authenticated;
 
 -- ─────────────────────────────────────────────────────────────
 -- usuarios
 --
 -- Cada uno ve su propia fila (la necesita el login, incluso desactivado,
--- para poder mostrarle por que no puede entrar). El admin ve a todos.
+-- para poder mostrarle por que no puede entrar). Admin y supervisor ven a
+-- todos (el supervisor, en solo lectura).
 -- ─────────────────────────────────────────────────────────────
 alter table usuarios enable row level security;
 
 drop policy if exists "Ver usuarios" on usuarios;
 create policy "Ver usuarios" on usuarios for select to authenticated
-  using (private.es_admin() or id = (select auth.uid()));
+  using (private.ve_todo() or id = (select auth.uid()));
 
 -- El `with check` mira la fila DESPUES del update: si es la del propio
 -- admin, exige que siga siendo admin y activa. Asi no puede degradarse ni
@@ -98,7 +114,12 @@ create policy "Admin gestiona usuarios" on usuarios for update to authenticated
 -- crearla en Auth y borrarla implica borrarla de Auth. Las dos cosas pasan
 -- por /api, que usa la service_role key y bypassea todo esto.
 -- ─────────────────────────────────────────────────────────────
+--
+-- Se revoca de `authenticated` ANTES de conceder: en Supabase las tablas nuevas
+-- de public vienen con ALL para `authenticated` por defecto, y sin este revoke
+-- el grant por columna de abajo no restringiria nada.
 revoke all on table usuarios from anon;
+revoke all on table usuarios from authenticated;
 grant select on table usuarios to authenticated;
 grant update (rol, activo) on table usuarios to authenticated;
 

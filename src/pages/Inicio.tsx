@@ -1,4 +1,4 @@
-import { Users } from 'lucide-react'
+import { BarChart3, ClipboardList, MapPinned, Store, Users } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
@@ -9,7 +9,8 @@ interface Modulo {
   titulo: string
   descripcion: string
   icono: ComponentType<{ className?: string }>
-  soloAdmin?: boolean
+  /** Solo admin y supervisor. */
+  veTodo?: boolean
 }
 
 /**
@@ -19,19 +20,44 @@ interface Modulo {
  */
 const MODULOS: Modulo[] = [
   {
+    to: '/pedidos',
+    titulo: 'Pedidos',
+    descripcion: 'Cargar un pedido desde la foto y consultar los ya guardados.',
+    icono: ClipboardList,
+  },
+  {
+    to: '/informes',
+    titulo: 'Informes',
+    descripcion: 'Registrar visitas a clientes con su ubicacion y verlas en el mapa.',
+    icono: MapPinned,
+  },
+  {
+    to: '/clientes',
+    titulo: 'Clientes',
+    descripcion: 'Listado de clientes, su historial de compras y su ubicacion.',
+    icono: Store,
+  },
+  {
+    to: '/reportes',
+    titulo: 'Reportes',
+    descripcion: 'Totales, evolucion mensual y rankings de ventas.',
+    icono: BarChart3,
+    veTodo: true,
+  },
+  {
     to: '/usuarios',
     titulo: 'Usuarios',
     descripcion: 'Altas, roles y acceso de las personas del sistema.',
     icono: Users,
-    soloAdmin: true,
+    veTodo: true,
   },
 ]
 
 export default function Inicio() {
-  const { usuario, rol, esAdmin } = useAuth()
+  const { usuario, rol, veTodo } = useAuth()
 
-  const modulos = MODULOS.filter((m) => !m.soloAdmin || esAdmin)
-  const primerNombre = usuario?.nombre?.split(' ')[0] ?? ''
+  const modulos = MODULOS.filter((m) => !m.veTodo || veTodo)
+  const primerNombre = usuario?.nombre?.split(' ')[0] ?? usuario?.username ?? ''
 
   return (
     <div>
@@ -40,7 +66,7 @@ export default function Inicio() {
           Hola{primerNombre ? `, ${primerNombre}` : ''}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {usuario?.email}
+          ¿Que queres hacer?
           {rol && <> · {ROL_LABEL[rol]}</>}
         </p>
       </div>

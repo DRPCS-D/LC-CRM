@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Rol, Usuario } from '@/lib/database.types'
+import { blobABase64 } from '@/lib/imagen'
 import { apiFetch, supabase } from '@/lib/supabase'
 
 interface Estado {
@@ -17,9 +18,9 @@ interface Estado {
  *   · Cambiar el rol y activar/desactivar van DIRECTO a PostgREST. Son las
  *     unicas dos columnas con `grant update` para el cliente, y la policy ya
  *     exige ser admin; no hace falta un endpoint que repita ese chequeo.
- *   · Crear, editar nombre/email, cambiar contrasena y eliminar pasan por
- *     /api/admin/usuarios, porque todas tocan `auth.users` y eso necesita la
- *     service_role key, que solo puede vivir en el servidor.
+ *   · Crear, editar username/nombre/foto, cambiar contrasena y eliminar pasan
+ *     por /api/admin/usuarios, porque tocan `auth.users` (o el bucket de
+ *     avatares) y eso necesita la service_role key, que solo vive en el servidor.
  *
  * Antes de agregar un endpoint nuevo conviene preguntarse de que lado cae.
  */
@@ -31,7 +32,7 @@ export function useUsuarios() {
     const { data, error } = await supabase
       .from('usuarios')
       .select('*')
-      .order('nombre', { ascending: true })
+      .order('username', { ascending: true })
 
     setEstado({
       data: (data ?? []) as Usuario[],
@@ -44,19 +45,41 @@ export function useUsuarios() {
     refetch()
   }, [refetch])
 
-  async function crear(payload: { nombre: string; email: string; password: string; rol: Rol }) {
+  async function crear(payload: {
+    username: string
+    nombre: string
+    password: string
+    rol: Rol
+    foto?: Blob | null
+  }) {
     try {
-      await apiFetch('/api/admin/usuarios', { accion: 'crear', ...payload })
+      const { foto, ...resto } = payload
+      await apiFetch('/api/admin/usuarios', {
+        accion: 'crear',
+        ...resto,
+        foto: foto ? { base64: await blobABase64(foto), mime: 'image/jpeg' } : null,
+      })
       return { error: null }
     } catch (e) {
       return { error: e instanceof Error ? e.message : 'Error al crear el usuario.' }
     }
   }
 
-  /** Nombre y email pasan por /api: el email es tambien el usuario del login. */
-  async function editar(payload: { id: string; nombre: string; email: string }) {
+  /** Username, nombre y foto pasan por /api: el username es tambien el login. */
+  async function editar(payload: {
+    id: string
+    username: string
+    nombre: string
+    foto?: Blob | null
+    quitarFoto?: boolean
+  }) {
     try {
-      await apiFetch('/api/admin/usuarios', { accion: 'editar', ...payload })
+      const { foto, ...resto } = payload
+      await apiFetch('/api/admin/usuarios', {
+        accion: 'editar',
+        ...resto,
+        foto: foto ? { base64: await blobABase64(foto), mime: 'image/jpeg' } : null,
+      })
       return { error: null }
     } catch (e) {
       return { error: e instanceof Error ? e.message : 'Error al guardar los datos.' }

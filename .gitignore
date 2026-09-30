@@ -38,3 +38,6 @@ supabase/.branches
 
 # Zip del proyecto del que sale esta base (no forma parte del codigo)
 app-base.zip
+
+# Credenciales de las cuentas creadas al arrancar el proyecto (admin + pruebas)
+credenciales.local.json

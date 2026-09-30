@@ -4,12 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Que es esto
 
-Un punto de partida para aplicaciones web, no una app en si. Trae login,
-gestion de usuarios, dos niveles de permiso, tema y andamiaje de PWA — nada
-especifico de un dominio. Sale de extraer la base de un sistema real,
-sacandole todo el dominio y dejando el esqueleto de interfaz + cuentas. Ver
-[README.md](README.md) para la explicacion a nivel producto (tabla de roles,
-como arrancar una app nueva desde esta base, notas de deploy).
+LC CRM: pedidos (con lectura de la foto por OpenAI), visitas a clientes con
+GPS y reportes de LA COSTA S.R.L. Reemplaza a una app de Apps Script + Google
+Sheets. Se construyo sobre una base generica (login, usuarios, roles, tema,
+PWA) a la que se le agrego el dominio. Ver [README.md](README.md) para la
+explicacion a nivel producto, las variables de entorno y el deploy.
 
 ## Comandos
 
@@ -34,62 +33,91 @@ comandos resuelven siempre la misma version.
 
 ## Arquitectura
 
-### Dos niveles, los dos globales
+### Tres niveles, los tres globales
 
-Una sola tabla propia: `usuarios`, colgada de `auth.users` (comparten el
-`id`). `rol` es una columna de esa fila y vale `'admin'` o `'usuario'`. No
-hay tenants, ni roles por seccion, ni un super-administrador por encima.
+`usuarios` cuelga de `auth.users` (comparten el `id`). `rol` vale `'admin'`,
+`'supervisor'` o `'vendedor'` (antes Admin, AdminL y User en el Sheet). No hay
+tenants ni roles por seccion.
 
-- `admin` — gestiona a todas las personas del sistema: alta, edicion de
-  nombre/email, contrasena, rol y activo/inactivo. Es el nivel maximo.
-- `usuario` — usa la app. De `usuarios` solo lee su propia fila.
+- `admin` — todo: edita y borra pedidos, informes y clientes, y gestiona
+  personas.
+- `supervisor` — ve todo, no escribe nada.
+- `vendedor` — carga pedidos e informes y ve solo los suyos.
 
-Un admin **puede** nombrar a otro admin, a proposito: sin un nivel superior,
-si no pudiera no habria forma de tener un segundo administrador sin entrar a
-la base. Lo que **no** puede es sacarse a si mismo — la policy de update
-tiene un `with check` que, cuando la fila afectada es la del propio actor,
-exige que siga saliendo `rol = 'admin' and activo`. Eliminar la propia cuenta
-lo corta `/api`. Entre las tres cosas, el sistema no puede quedarse sin
-ningun admin por accidente.
+Los helpers `security definer` viven en el esquema `private` (no `public`,
+para que PostgREST no los exponga como RPC): `es_admin()`, `ve_todo()` (admin
+o supervisor) y `esta_activo()`. Los tres exigen `activo`: una cuenta dada de
+baja pierde el acceso aunque su rol diga otra cosa. Revocarles `execute` a
+`authenticated` rompe la evaluacion de la RLS por completo.
 
-`activo = false` es la baja: la cuenta sigue existiendo en Auth y hasta puede
-iniciar sesion, pero la RLS deja de devolverle filas y `AppLayout` le muestra
-"cuenta desactivada" en vez de una pantalla vacia. Ninguna sesion viva se
-entera en el momento — la proxima consulta protegida simplemente no devuelve
-nada.
+Un admin **puede** nombrar a otro admin, a proposito, pero **no puede sacarse
+a si mismo**: el `with check` de la policy de update exige que, si la fila es la
+propia, siga saliendo `rol = 'admin' and activo`. Eliminar la propia cuenta lo
+corta `/api`.
 
-Los dos helpers `security definer` viven en el esquema `private` (no en
-`public`) justamente para que PostgREST **no** los exponga como RPC
-llamables: existen solo para que los evalue la RLS. Revocarles el `execute` a
-`anon`/`public` rompe la evaluacion de la RLS por completo.
+`activo = false` es la baja: la cuenta sigue en Auth y hasta puede iniciar
+sesion, pero la RLS deja de devolverle filas y `AppLayout` muestra "cuenta
+desactivada". Se prefiere a borrar porque borrar deja los pedidos sin autor.
 
-- `private.es_admin()` — ¿quien llama es admin **y** esta activo?
-- `private.esta_activo()` — el chequeo que van a usar las policies de las
-  tablas que agregue cada app: para trabajar alcanza con estar activo; el rol
-  solo importa para administrar gente.
+**Se inicia sesion con `username`.** El email de Auth es uno interno,
+`<username>@lc-crm.local`; `emailDeUsername()` (`src/lib/usuario.ts`) y
+`api/admin/usuarios.ts` tienen cada uno su copia del dominio: si cambia, hay que
+cambiarlo en los dos.
 
-Al agregar una tabla, seguir el patron documentado al final de
-`002_rls.sql` y sumar cobertura en `supabase/tests/rls_test.sql`.
+### El dominio (`supabase/migrations/004_dominio.sql`)
+
+`clientes`, `pedidos` e `informes`. Reglas que no se ven leyendo solo el
+frontend:
+
+- **Autor, fecha y copia del cliente los pone un trigger**
+  (`completar_registro_dominio`), nunca el navegador. Con sesion, `usuario_id`
+  sale de `auth.uid()` y `created_at` de `now()`; en un update no cambian. Sin
+  sesion (service_role: el script de migracion) se respetan los valores que
+  vengan, asi se puede conservar el historial del Sheet.
+- `cliente_nombre/codigo`, `ciudad` y `zona` de pedidos e informes son una
+  **foto** del cliente al guardar; renombrar un cliente no reescribe el pasado.
+- `pedidos.nro_orden` conserva los ceros ("0011504"); `nro_orden_norm` (columna
+  generada, solo digitos y sin ceros) es la que sirve para detectar duplicados.
+  Un duplicado avisa pero se puede guardar.
+- `idempotency_key` reemplaza la deduplicacion de 120 s de Apps Script: el
+  navegador genera una clave por intento de guardado y un reintento tras un
+  timeout choca con el unique en vez de duplicar. `NuevoPedido` ademas
+  reutiliza la foto ya subida en el reintento.
+- Un informe se guarda con la RPC `guardar_informe()` y no con un insert, porque
+  un vendedor no puede escribir en `clientes` pero su visita si tiene que
+  actualizar la ubicacion del cliente (`security definer`). La ubicacion de un
+  informe no se edita nunca: solo `cliente_id` y `comentario` tienen grant.
+- `total_global_cliente()` devuelve la suma de compras de un cliente entre todos
+  los vendedores, sin exponer los pedidos ajenos.
+- Fotos: bucket privado `pedidos` (URLs firmadas, `src/lib/fotos.ts`) y bucket
+  publico `avatares` (solo escribe `/api`). Al reemplazar o borrar un pedido hay
+  que borrar su objeto de Storage; la base no lo hace sola.
 
 ### Los grants por columna no son un detalle
 
+**Antes de conceder hay que revocar.** En Supabase las tablas nuevas de
+`public` nacen con `ALL` para `authenticated`; sin un `revoke all ... from
+authenticated` previo, un `grant update (col)` no restringe nada. Esto ya mordio
+una vez y lo atrapo `rls_test.sql`.
+
 `usuarios` tiene `grant update (rol, activo) ... to authenticated` y nada
-mas: ni insert, ni delete, ni update de `nombre`/`email`. No es redundante
+mas: ni insert, ni delete, ni update de `nombre`/`username`/`email`/`foto_path`. No es redundante
 con la RLS, resuelve algo que la RLS no puede expresar bien — que un admin
 puede cambiar el rol de alguien desde el navegador, pero no su email, porque
-el email vive tambien en `auth.users` y cambiarlo solo en el perfil dejaria a
-la persona viendo un email con el que no puede iniciar sesion.
+el username es el login (vive tambien en `auth.users`) y cambiarlo solo en el
+perfil dejaria a la persona viendo un usuario con el que no puede entrar.
 
 Si en el futuro hay que permitir editar otra columna desde el cliente, hay
 que acordarse de agregarla a ese grant: la policy sola no alcanza.
 
 ### `/api` existe solo para lo que necesita la service_role key
 
-Las funciones serverless de Vercel bajo `api/` existen unicamente para
-operaciones que tocan `auth.users`: crear una cuenta, borrarla, cambiar
-contrasena o el email de login. Todo lo demas — listar usuarios, cambiar el
-rol, activar/desactivar — va directo del cliente a PostgREST, protegido por
-la RLS. Antes de agregar un endpoint, conviene preguntarse si no alcanza con
+Las funciones serverless de Vercel bajo `api/` existen unicamente para lo que
+necesita un secreto del servidor: operaciones sobre `auth.users` o el bucket de
+avatares (`admin/usuarios.ts`, `cuenta/password.ts`) y la llamada a OpenAI
+(`pedidos/extraer.ts`, porque `OPENAI_API_KEY` no puede llegar al navegador).
+Todo lo demas — pedidos, informes, clientes, cambiar el rol, activar/desactivar
+— va directo del cliente a PostgREST, protegido por la RLS. Antes de agregar un endpoint, conviene preguntarse si no alcanza con
 una policy.
 
 Los endpoints nunca confian en el rol que manda el cliente: derivan la
@@ -149,8 +177,8 @@ esta base no se pisan aunque corran en el mismo dominio.
 
 ### Probar la RLS de verdad, no solo a traves de la app
 
-`supabase/tests/rls_test.sql` es una suite pgTAP que siembra cinco personas —
-un admin, dos usuarios comunes, un usuario desactivado y un admin
+`supabase/tests/rls_test.sql` es una suite pgTAP que siembra seis personas —
+un admin, un supervisor, dos vendedores, un vendedor desactivado y un admin
 desactivado — y, para cada aserto, se hace pasar por una persona especifica
 fijando los GUC de Postgres de los que depende PostgREST antes de correr la
 consulta bajo prueba:
@@ -201,15 +229,22 @@ anotado en un comentario ahi mismo, junto con el arreglo (generar los tipos
 reales con `npm run tipos` y agregar un chequeo que compare solo los nombres
 de columna contra ellos) para cuando el esquema crezca.
 
-## Al construir una app sobre esta base
+## Al agregar cosas
 
-Ver el paso a paso en el README. Lo que conviene no perder de vista:
-
-- La UI **nunca** es el control de acceso. `RequiereAdmin` y el `soloAdmin`
-  del `NAV` existen para no mostrarle a alguien una pantalla que le va a
-  aparecer vacia; lo que protege los datos es la policy.
+- La UI **nunca** es el control de acceso. `RequiereVeTodo`, el `veTodo` del
+  `NAV` y el `esAdmin` de los botones existen para no mostrarle a alguien una
+  pantalla o accion que le va a fallar; lo que protege los datos es la policy.
 - Toda tabla nueva arranca con `enable row level security` y su policy en la
-  misma migracion. Una tabla con RLS habilitada y sin policy no devuelve
-  nada, que es el modo correcto de fallar.
+  misma migracion, y `revoke all ... from anon, authenticated` antes de los
+  grants. Una tabla con RLS y sin policy no devuelve nada, que es el modo
+  correcto de fallar. Sumar su bloque en `supabase/tests/rls_test.sql`.
+- Las tablas de datos (`useDatos.ts`) se cachean en memoria (`src/lib/recurso.ts`)
+  y se vacian al cambiar de sesion: si se agrega una, crearla con
+  `crearRecurso()` para que tambien se vacie. Despues de una escritura, llamar a
+  su `refetch()`.
+- `Mapa`, `Reportes` y la exportacion a PDF se cargan con `lazy`/`import()`
+  porque pesan; no importarlos de forma estatica.
 - Los modulos se enganchan en tres lugares: la ruta (`src/App.tsx`), el link
   (`NAV` en `AppLayout`) y la tarjeta (`MODULOS` en `Inicio`).
+- Al tocar `rls_test.sql`, vaciar `request.jwt.claim.sub` antes de sembrar o
+  verificar como superusuario (`reset role` no lo limpia).

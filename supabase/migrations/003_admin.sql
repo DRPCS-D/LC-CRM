@@ -5,21 +5,24 @@
 -- mano en el dashboard de Supabase:
 --
 --   Authentication → Users → Add user → Create new user
+--   Email: <username>@lc-crm.local   (por ejemplo admin@lc-crm.local)
 --   (marcar "Auto Confirm User", si no, no va a poder entrar)
 --
--- Cambiar el email y el nombre de abajo por los que se usaron ahi.
+-- En el login de la app se escribe solo el <username> ("admin"): el sufijo
+-- @lc-crm.local lo agrega la app. Cambiar abajo el username y el nombre si
+-- se uso otro.
 --
 -- El primer admin no se crea desde la app a proposito: no hay cuentas
 -- todavia, asi que no habria con quien iniciar sesion para crearlo. Del
 -- segundo en adelante ya se dan de alta desde /usuarios.
 -- ═══════════════════════════════════════════════════════════════════════════
 
-insert into public.usuarios (id, nombre, email, rol)
-select u.id, 'Administrador', u.email, 'admin'
+insert into public.usuarios (id, username, nombre, email, rol)
+select u.id, 'admin', 'Administrador', u.email, 'admin'
 from auth.users u
-where u.email = 'cambiar@ejemplo.com'
+where u.email = 'admin@lc-crm.local'
 on conflict (id) do update
   set rol = 'admin', activo = true;
 
 -- Verificacion: tiene que devolver exactamente una fila
-select id, email, rol from public.usuarios where rol = 'admin';
+select id, username, email, rol from public.usuarios where rol = 'admin';

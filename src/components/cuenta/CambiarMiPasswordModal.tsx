@@ -22,7 +22,7 @@ export function CambiarMiPasswordModal({ abierto, onCerrar }: { abierto: boolean
   }, [abierto])
 
   async function onGuardar() {
-    if (password.length < 8) return setError('Minimo 8 caracteres.')
+    if (password.length < 6) return setError('Minimo 6 caracteres.')
     if (password !== confirmacion) return setError('Las contrasenas no coinciden.')
 
     setGuardando(true)
@@ -56,7 +56,7 @@ export function CambiarMiPasswordModal({ abierto, onCerrar }: { abierto: boolean
       }
     >
       <div className="space-y-4">
-        <Field label="Nueva contrasena" hint="Minimo 8 caracteres">
+        <Field label="Nueva contrasena" hint="Minimo 6 caracteres">
           <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus />
         </Field>
         <Field label="Repetir contrasena">

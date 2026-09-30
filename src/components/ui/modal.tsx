@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from './button'
 
@@ -72,13 +72,19 @@ export function Modal({
   )
 }
 
-/** Confirmacion para acciones destructivas. */
+/**
+ * Confirmacion para acciones destructivas. Con `palabra`, ademas hay que
+ * escribirla para habilitar el boton (como el "eliminar" de la app original
+ * para borrar pedidos, informes y clientes).
+ */
 export function ConfirmModal({
   abierto,
   titulo,
   mensaje,
   textoConfirmar = 'Eliminar',
   procesando = false,
+  palabra,
+  tono = 'destructive',
   onConfirmar,
   onCancelar,
 }: {
@@ -87,9 +93,17 @@ export function ConfirmModal({
   mensaje: ReactNode
   textoConfirmar?: string
   procesando?: boolean
+  palabra?: string
+  tono?: 'destructive' | 'primary'
   onConfirmar: () => void
   onCancelar: () => void
 }) {
+  const [escrito, setEscrito] = useState('')
+  useEffect(() => {
+    if (abierto) setEscrito('')
+  }, [abierto])
+  const bloqueado = Boolean(palabra) && escrito.trim().toLowerCase() !== palabra?.toLowerCase()
+
   return (
     <Modal
       abierto={abierto}
@@ -101,13 +115,29 @@ export function ConfirmModal({
           <Button variant="outline" onClick={onCancelar} disabled={procesando}>
             Cancelar
           </Button>
-          <Button variant="destructive" onClick={onConfirmar} disabled={procesando}>
-            {procesando ? 'Eliminando…' : textoConfirmar}
+          <Button variant={tono} onClick={onConfirmar} disabled={procesando || bloqueado}>
+            {procesando ? 'Procesando…' : textoConfirmar}
           </Button>
         </>
       }
     >
       <div className="text-sm text-muted-foreground">{mensaje}</div>
+      {palabra && (
+        <div className="mt-4">
+          <p className="mb-1.5 text-xs text-muted-foreground">
+            Escribi <strong className="text-foreground">{palabra}</strong> para confirmar:
+          </p>
+          <input
+            autoFocus
+            value={escrito}
+            onChange={(e) => setEscrito(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !bloqueado && !procesando) onConfirmar()
+            }}
+            className="h-9.5 w-full rounded-md border border-input bg-card px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </div>
+      )}
     </Modal>
   )
 }
