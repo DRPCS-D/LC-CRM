@@ -21,17 +21,18 @@ import { ROL_LABEL } from '@/lib/database.types'
 import { cn } from '@/lib/utils'
 
 /**
- * Los links de la barra (y de la barra inferior en mobile). `veTodo` decide
- * si aparece para admin/supervisor solamente, pero quien protege los datos
- * es la RLS, no esta lista.
+ * Los links de la barra de arriba (escritorio). `veTodo` decide si aparece
+ * para admin/supervisor solamente, pero quien protege los datos es la RLS, no
+ * esta lista. En el celular la barra de abajo lleva solo los `abajo`: el resto
+ * de las secciones se alcanza desde las tarjetas de Inicio.
  */
 const NAV = [
-  { to: '/', label: 'Inicio', end: true, veTodo: false, icono: House },
-  { to: '/pedidos', label: 'Pedidos', end: false, veTodo: false, icono: ClipboardList },
-  { to: '/informes', label: 'Informes', end: false, veTodo: false, icono: MapPinned },
-  { to: '/clientes', label: 'Clientes', end: false, veTodo: false, icono: Store },
-  { to: '/reportes', label: 'Reportes', end: false, veTodo: true, icono: BarChart3 },
-  { to: '/usuarios', label: 'Usuarios', end: false, veTodo: true, icono: Users },
+  { to: '/', abajo: true, label: 'Inicio', end: true, veTodo: false, icono: House },
+  { to: '/pedidos', abajo: true, label: 'Pedidos', end: false, veTodo: false, icono: ClipboardList },
+  { to: '/informes', abajo: true, label: 'Informes', end: false, veTodo: false, icono: MapPinned },
+  { to: '/clientes', abajo: false, label: 'Clientes', end: false, veTodo: false, icono: Store },
+  { to: '/reportes', abajo: false, label: 'Reportes', end: false, veTodo: true, icono: BarChart3 },
+  { to: '/usuarios', abajo: false, label: 'Usuarios', end: false, veTodo: true, icono: Users },
 ]
 
 const MENSAJE_PROBLEMA = {
@@ -134,7 +135,7 @@ export default function AppLayout() {
         className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-card/95 backdrop-blur md:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        {links.map(({ to, label, end, icono: Icono }) => (
+        {links.filter((item) => item.abajo).map(({ to, label, end, icono: Icono }) => (
           <NavLink
             key={to}
             to={to}
