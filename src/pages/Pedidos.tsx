@@ -3,6 +3,8 @@ import {
   ClipboardList,
   Download,
   FilePlus2,
+  Camera,
+  Images,
   ImageUp,
   ListFilter,
   Loader2,
@@ -103,7 +105,10 @@ function NuevoPedido() {
   const [invalidos, setInvalidos] = useState<CampoPedido[]>([])
   const [guardando, setGuardando] = useState<'subiendo' | 'guardando' | null>(null)
   const [duplicados, setDuplicados] = useState<Pedido[] | null>(null)
+  // Galeria/archivos y camara son dos inputs porque `capture` fuerza la camara
+  // en el celular y en la PC se ignora: un solo input no puede ser las dos cosas.
   const inputRef = useRef<HTMLInputElement>(null)
+  const camaraRef = useRef<HTMLInputElement>(null)
 
   // Una clave por intento de guardado: si la red se corta y hay que reintentar,
   // el segundo insert choca con el unique en vez de duplicar el pedido. Y la
@@ -295,8 +300,17 @@ function NuevoPedido() {
             hidden
             onChange={(e) => { cargarArchivo(e.target.files?.[0]); e.target.value = '' }}
           />
+          <input
+            ref={camaraRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            onChange={(e) => { cargarArchivo(e.target.files?.[0]); e.target.value = '' }}
+          />
 
           {!foto ? (
+            <div className="space-y-3">
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
@@ -317,11 +331,20 @@ function NuevoPedido() {
               ) : (
                 <>
                   <ImageUp className="size-7" />
-                  <span className="font-medium text-foreground">Toca para sacar o elegir una foto</span>
-                  <span className="text-xs">o arrastra el archivo aca</span>
+                  <span className="font-medium text-foreground">Tocá para elegir un archivo</span>
+                  <span className="text-xs">o arrastralo acá</span>
                 </>
               )}
             </button>
+            <div className="grid grid-cols-2 gap-3">
+              <Button type="button" variant="outline" size="lg" disabled={procesando} onClick={() => camaraRef.current?.click()}>
+                <Camera /> Cámara
+              </Button>
+              <Button type="button" variant="outline" size="lg" disabled={procesando} onClick={() => inputRef.current?.click()}>
+                <Images /> Galería
+              </Button>
+            </div>
+            </div>
           ) : (
             <div className="space-y-3">
               {esCola && (
