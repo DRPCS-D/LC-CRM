@@ -13,13 +13,20 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 
 const { colorPrimario: PRIMARY } = JSON.parse(readFileSync('app.config.json', 'utf-8'))
 
-// glyph: las iniciales "LC" (LA COSTA) en blanco. Coordenadas pensadas
-// para un viewBox de 100x100, con el contenido dentro del 80% central para
-// respetar el "safe zone" de los iconos maskable. Van como trazos y no como
-// <text> para no depender de las fuentes instaladas donde se corra.
+// glyph: el logo "LC" de LA COSTA (logo original: viewBox 341.89 x 158.37),
+// en blanco y centrado. Se escala a 64 unidades de ancho dentro del viewBox
+// de 100x100: las esquinas del logo quedan a ~35 unidades del centro, dentro
+// del "safe zone" circular (radio 40) de los iconos maskable, que cada sistema
+// operativo recorta con la forma que quiera.
+const LOGO_W = 341.89
+const LOGO_H = 158.37
+const ANCHO = 64
+const ESCALA = ANCHO / LOGO_W
 const GLYPH = `
-  <path d="M24 30 v40 h22" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M78 36 a17 17 0 1 0 0 28" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" opacity="0.9"/>
+  <g transform="translate(${((100 - ANCHO) / 2).toFixed(3)} ${((100 - LOGO_H * ESCALA) / 2).toFixed(3)}) scale(${ESCALA.toFixed(5)})" fill="#ffffff" fill-rule="evenodd">
+    <path d="M341.39,158.37l-127.92-.48c-11.66-.03-21.64-3.93-29.93-11.89-8.3-7.94-12.46-18.03-12.41-30.45l.25-71.91c0-11.63,4.42-21.49,13.04-29.75,8.71-8.19,18.55-12.26,29.56-12.26l127.92.53-.1,27.91-127.92-.48c-3.65,0-7.05,1.4-10.23,4.25-3.2,2.9-4.79,6.14-4.79,9.91l-.2,71.94c-.03,9.26,4.93,13.98,14.91,14.02l127.91.42-.08,28.22Z"/>
+    <path d="M150.24,156.79l-107.93-.43c-11.66-.04-21.65-4.03-29.92-11.89C4.1,136.55-.07,126.43,0,114.07L.34,0l27.45.09-.31,114.09c-.06,9.29,4.93,13.99,14.91,13.99l107.94.4-.09,28.21Z"/>
+  </g>
 `.trim()
 
 function svg({ rounded }) {
