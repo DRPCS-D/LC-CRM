@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button'
 import { ErrorBox } from '@/components/ui/estado'
 import { Field, Input } from '@/components/ui/field'
 import { Modal } from '@/components/ui/modal'
-import { apiFetch } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
+import { apiFetch, supabase } from '@/lib/supabase'
 
 /** Cualquier usuario logueado cambia su propia contrasena, sin depender del administrador. */
 export function CambiarMiPasswordModal({ abierto, onCerrar }: { abierto: boolean; onCerrar: () => void }) {
@@ -12,6 +13,7 @@ export function CambiarMiPasswordModal({ abierto, onCerrar }: { abierto: boolean
   const [confirmacion, setConfirmacion] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
+  const { usuario } = useAuth()
 
   useEffect(() => {
     if (abierto) {
@@ -29,6 +31,19 @@ export function CambiarMiPasswordModal({ abierto, onCerrar }: { abierto: boolean
     setError(null)
     try {
       await apiFetch('/api/cuenta/password', { password })
+
+      // Supabase cierra las sesiones abiertas al cambiar la contrasena desde
+      // el servidor, incluida esta: sin volver a entrar, el JWT sigue sirviendo
+      // para PostgREST pero /api contesta "No autenticado" en todo. Se inicia
+      // sesion de nuevo con la clave nueva para que la persona no lo note.
+      if (usuario) {
+        const { error: errSesion } = await supabase.auth.signInWithPassword({
+          email: usuario.email,
+          password,
+        })
+        if (errSesion) await supabase.auth.signOut()
+      }
+
       toast.success('Contrasena actualizada')
       onCerrar()
     } catch (e) {

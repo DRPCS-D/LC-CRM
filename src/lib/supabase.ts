@@ -47,6 +47,14 @@ export async function apiFetch<T>(path: string, body?: unknown): Promise<T> {
     throw new Error(`Respuesta invalida del servidor (${res.status})`)
   }
 
+  if (res.status === 401) {
+    // La sesion ya no vale para el servidor (vencio, o se cambio la
+    // contrasena desde otro lado). Se cierra para que la app lleve al login en
+    // vez de dejar pantallas que fallan una a una con "No autenticado".
+    await supabase.auth.signOut()
+    throw new Error('Tu sesion expiro. Volve a iniciar sesion.')
+  }
+
   if (!res.ok) {
     const msg = (json as { error?: string })?.error
     throw new Error(msg || `Error ${res.status}`)
