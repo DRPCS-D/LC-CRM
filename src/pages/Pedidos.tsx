@@ -105,9 +105,12 @@ function NuevoPedido() {
   const [invalidos, setInvalidos] = useState<CampoPedido[]>([])
   const [guardando, setGuardando] = useState<'subiendo' | 'guardando' | null>(null)
   const [duplicados, setDuplicados] = useState<Pedido[] | null>(null)
-  // Galeria/archivos y camara son dos inputs porque `capture` fuerza la camara
-  // en el celular y en la PC se ignora: un solo input no puede ser las dos cosas.
+  // Tres inputs porque el tipo de archivo decide que abre el celular:
+  //  · archivoRef — el recuadro grande: fotos Y PDF (abre el explorador de archivos).
+  //  · galeriaRef — solo `image/*`: abre la galeria de fotos, sin PDF.
+  //  · camaraRef  — `capture` fuerza la camara; en la PC se ignora.
   const inputRef = useRef<HTMLInputElement>(null)
+  const galeriaRef = useRef<HTMLInputElement>(null)
   const camaraRef = useRef<HTMLInputElement>(null)
 
   // Una clave por intento de guardado: si la red se corta y hay que reintentar,
@@ -301,6 +304,13 @@ function NuevoPedido() {
             onChange={(e) => { cargarArchivo(e.target.files?.[0]); e.target.value = '' }}
           />
           <input
+            ref={galeriaRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => { cargarArchivo(e.target.files?.[0]); e.target.value = '' }}
+          />
+          <input
             ref={camaraRef}
             type="file"
             accept="image/*"
@@ -340,7 +350,7 @@ function NuevoPedido() {
               <Button type="button" variant="outline" size="lg" disabled={procesando} onClick={() => camaraRef.current?.click()}>
                 <Camera /> Cámara
               </Button>
-              <Button type="button" variant="outline" size="lg" disabled={procesando} onClick={() => inputRef.current?.click()}>
+              <Button type="button" variant="outline" size="lg" disabled={procesando} onClick={() => galeriaRef.current?.click()}>
                 <Images /> Galería
               </Button>
             </div>
