@@ -1,0 +1,8 @@
+{
+  "$comentario": "Identidad de la app. Cambiar esto (mas el 'name' de package.json) rebrandea la app entera: titulo, manifest de la PWA, cabecera, login e iconos. No hay ningun otro archivo que tocar a mano. Ver README → 'Empezar una app nueva'.",
+  "nombre": "App Base",
+  "descripcion": "Base para construir aplicaciones: login, usuarios, roles, tema e interfaz.",
+  "colorPrimario": "#1659b5",
+  "colorFondo": "#f9fafb",
+  "idioma": "es"
+}
