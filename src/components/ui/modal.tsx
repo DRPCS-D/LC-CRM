@@ -3,6 +3,29 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from './button'
 
+/**
+ * Bloqueo del scroll del fondo con contador. Con varios modales abiertos a la
+ * vez (el detalle de un pedido y, encima, la confirmacion de borrado), cada
+ * uno guardaba el `overflow` "previo" y lo restauraba al cerrarse: si el de
+ * abajo cerraba antes que el de arriba, el de arriba "restauraba" el
+ * `hidden` que habia visto al abrir y la pagina quedaba sin scroll para
+ * siempre. Con el contador, solo se toca el body al abrir el primero y al
+ * cerrar el ultimo.
+ */
+let bloqueos = 0
+let overflowOriginal = ''
+
+function bloquearScroll() {
+  if (bloqueos++ === 0) {
+    overflowOriginal = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+  }
+}
+
+function liberarScroll() {
+  if (--bloqueos === 0) document.body.style.overflow = overflowOriginal
+}
+
 export function Modal({
   abierto,
   titulo,
@@ -20,19 +43,23 @@ export function Modal({
   footer?: ReactNode
   ancho?: string
 }) {
-  // Escape cierra, y el body no scrollea detras del modal
+  // El body no scrollea detras del modal. Efecto aparte, que depende solo de
+  // `abierto`: `onCerrar` suele cambiar en cada render y el contador tiene que
+  // sumar una vez por modal abierto, no una por render.
+  useEffect(() => {
+    if (!abierto) return
+    bloquearScroll()
+    return liberarScroll
+  }, [abierto])
+
+  // Escape cierra
   useEffect(() => {
     if (!abierto) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCerrar()
     }
     document.addEventListener('keydown', onKey)
-    const overflowPrevio = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = overflowPrevio
-    }
+    return () => document.removeEventListener('keydown', onKey)
   }, [abierto, onCerrar])
 
   if (!abierto) return null
