@@ -11,7 +11,8 @@ import { useUsuarios } from '@/hooks/useUsuarios'
 import { ROLES, ROL_DESCRIPCION, ROL_LABEL, type Rol, type Usuario } from '@/lib/database.types'
 import { formatFecha } from '@/lib/format'
 import { recortarAvatar } from '@/lib/imagen'
-import { LARGO_MINIMO_PASSWORD, USERNAME_VALIDO } from '@/lib/usuario'
+import { supabase } from '@/lib/supabase'
+import { emailDeUsername, LARGO_MINIMO_PASSWORD, USERNAME_VALIDO } from '@/lib/usuario'
 
 /**
  * Modales de gestion de usuarios. Crear, editar y borrar son del admin (el
@@ -351,6 +352,20 @@ export function EditarUsuarioModal({
         onGuardado()
         return
       }
+
+      // Cambiar la propia contrasena desde el servidor cierra la sesion de
+      // quien la cambia: sin volver a entrar, el JWT sigue sirviendo para
+      // PostgREST pero /api contesta "No autenticado" en todo. Se inicia
+      // sesion de nuevo con la clave nueva, y con el username NUEVO si se
+      // cambio en esta misma edicion (el email interno sale de el). Cambiar
+      // solo el username no cierra la sesion.
+      if (esYo) {
+        const { error: errSesion } = await supabase.auth.signInWithPassword({
+          email: emailDeUsername(u),
+          password,
+        })
+        if (errSesion) await supabase.auth.signOut()
+      }
     }
 
     setGuardando(false)
@@ -384,23 +399,12 @@ export function EditarUsuarioModal({
           deshabilitado={esYo}
           hint={esYo ? 'No podes cambiarte el rol a vos mismo.' : undefined}
         />
-        {/* La propia contrasena no se cambia desde aca: al cambiarla, Supabase
-            cierra la sesion de quien la cambia. Para eso esta el icono de la
-            llave de la barra, que vuelve a iniciar sesion solo. */}
-        <Field
-          label="Nueva contrasena"
-          hint={
-            esYo
-              ? 'Tu propia contrasena se cambia con el icono de la llave, arriba a la derecha.'
-              : `Dejala vacia para no cambiarla. Minimo ${LARGO_MINIMO_PASSWORD} caracteres.`
-          }
-        >
+        <Field label="Nueva contrasena" hint={`Dejala vacia para no cambiarla. Minimo ${LARGO_MINIMO_PASSWORD} caracteres.`}>
           <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="new-password"
-            disabled={esYo}
           />
         </Field>
         {error && <ErrorBox mensaje={error} />}
