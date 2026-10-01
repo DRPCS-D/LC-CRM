@@ -29,7 +29,7 @@ const handler: ApiHandler = async (req, res) => {
 
   const admin = clienteAdmin()
   const { error: errUpd } = await admin.auth.admin.updateUserById(actor.id, { password })
-  if (errUpd) return error(res, 400, 'No se pudo cambiar la contrasena.')
+  if (errUpd) return error(res, 400, 'No se pudo cambiar la contraseña.')
 
   res.status(200).json({ ok: true })
 }

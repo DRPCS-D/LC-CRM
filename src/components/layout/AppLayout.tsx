@@ -42,7 +42,7 @@ const MENSAJE_PROBLEMA = {
   },
   'sin-perfil': {
     titulo: 'Cuenta sin configurar',
-    texto: 'Tu usuario existe pero todavia no esta dado de alta. Contactate con el administrador del sistema.',
+    texto: 'Tu usuario existe pero todavía no está dado de alta. Contactate con el administrador del sistema.',
   },
 } as const
 
@@ -115,10 +115,10 @@ export default function AppLayout() {
               <Avatar nombre={usuario.username} fotoPath={usuario.foto_path} className="hidden sm:inline-flex" />
             )}
             <ThemeToggle />
-            <Button variant="ghost" size="icon" onClick={() => setModalPassword(true)} title="Cambiar mi contrasena">
+            <Button variant="ghost" size="icon" onClick={() => setModalPassword(true)} title="Cambiar mi contraseña">
               <KeyRound />
             </Button>
-            <Button variant="ghost" size="icon" onClick={signOut} title="Cerrar sesion">
+            <Button variant="ghost" size="icon" onClick={signOut} title="Cerrar sesión">
               <LogOut />
             </Button>
           </div>

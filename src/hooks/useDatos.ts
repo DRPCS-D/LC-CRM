@@ -56,8 +56,8 @@ export const useInformes = informes.useRecurso
 export function mensajeDeError(error: { message?: string; code?: string } | null | undefined, porDefecto: string): string {
   if (!error?.message) return porDefecto
   const m = error.message
-  if (/row-level security|permission denied/i.test(m)) return 'No tenes permiso para esta operacion.'
-  if (error.code === '23505' && /clientes_codigo/i.test(m)) return 'Ya existe un cliente con ese codigo.'
+  if (/row-level security|permission denied/i.test(m)) return 'No tenés permiso para esta operación.'
+  if (error.code === '23505' && /clientes_codigo/i.test(m)) return 'Ya existe un cliente con ese código.'
   if (/Debe seleccionar|ubicacion es obligatoria|ya no existe/i.test(m)) return m
   if (/Failed to fetch|NetworkError/i.test(m)) return 'Sin conexion. Revisa internet e intenta de nuevo.'
   return porDefecto

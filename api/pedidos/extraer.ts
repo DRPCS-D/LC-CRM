@@ -102,7 +102,7 @@ const handler: ApiHandler = async (req, res) => {
   const json = (await respuesta.json().catch(() => ({}))) as RespuestaOpenAI
   if (!respuesta.ok || json.error) {
     console.error('OpenAI', respuesta.status, json.error?.message)
-    return error(res, 502, 'No se pudo leer la imagen. Proba de nuevo o completa los datos a mano.')
+    return error(res, 502, 'No se pudo leer la imagen. Probá de nuevo o completá los datos a mano.')
   }
 
   const contenido = (json.choices?.[0]?.message?.content ?? '')

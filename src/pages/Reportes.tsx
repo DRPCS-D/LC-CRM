@@ -57,7 +57,7 @@ export default function Reportes() {
       <div className="mb-5 flex flex-wrap items-end gap-3">
         <div className="mr-auto">
           <h1 className="text-lg font-semibold text-foreground">Reportes</h1>
-          <p className="text-sm text-muted-foreground">Ventas segun los pedidos cargados.</p>
+          <p className="text-sm text-muted-foreground">Ventas según los pedidos cargados.</p>
         </div>
         <Field label="Desde"><Input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} /></Field>
         <Field label="Hasta"><Input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} /></Field>
@@ -78,11 +78,11 @@ export default function Reportes() {
       ) : error ? (
         <ErrorBox mensaje={error} />
       ) : filtrados.length === 0 ? (
-        <Vacio icono={BarChart3} titulo="Sin pedidos en el periodo" descripcion="Proba con otras fechas u otro tipo." />
+        <Vacio icono={BarChart3} titulo="Sin pedidos en el período" descripcion="Probá con otras fechas u otro tipo." />
       ) : (
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Kpi titulo="Pedidos del periodo" valor={formatMiles(tot.pedidos)} />
+            <Kpi titulo="Pedidos del período" valor={formatMiles(tot.pedidos)} />
             <Kpi titulo="Total pares" valor={formatMiles(tot.pares)} />
             <Kpi titulo="Suma total precio" valor={formatGs(tot.monto)} />
             <Kpi titulo="Ticket promedio" valor={formatGs(tot.ticket)} />
@@ -248,7 +248,7 @@ function ExportarModal({
   function csv() {
     const filas: (string | number)[][] = [
       ['LA COSTA S.R.L. · Reporte'],
-      ['Periodo', rangoTexto],
+      ['Período', rangoTexto],
       ['Tipo', periodo.tipo || 'Todos'],
       ['Generado por', generadoPor],
       ['Fecha', formatFechaHora(new Date().toISOString())],
@@ -296,7 +296,7 @@ function ExportarModal({
     <Modal
       abierto={abierto}
       titulo="Exportar reporte"
-      descripcion="Incluye la lista completa de cada seccion, no solo el top 10."
+      descripcion="Incluye la lista completa de cada sección, no solo el top 10."
       onCerrar={onCerrar}
       ancho="max-w-md"
       footer={

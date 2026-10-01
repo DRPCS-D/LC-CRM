@@ -89,7 +89,7 @@ export function ClienteSelector({
         ref={inputRef}
         value={texto}
         autoFocus={autoFocus}
-        placeholder="Buscar por codigo, razon social o fantasia…"
+        placeholder="Buscar por código, razón social o fantasía…"
         className={cn(invalido && 'border-destructive ring-1 ring-destructive')}
         onChange={(e) => {
           setTexto(e.target.value)
@@ -118,7 +118,7 @@ export function ClienteSelector({
         <div className="absolute inset-x-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-md border border-border bg-card py-1 shadow-lg">
           {sugerencias.length === 0 ? (
             <p className="px-3 py-2 text-xs text-muted-foreground">
-              Ningun cliente coincide. Solo se puede elegir un cliente del listado.
+              Ningún cliente coincide. Solo se puede elegir un cliente del listado.
             </p>
           ) : (
             sugerencias.map((c, i) => (

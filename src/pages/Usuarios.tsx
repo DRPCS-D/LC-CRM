@@ -64,7 +64,7 @@ export default function Usuarios() {
         <div>
           <h1 className="text-lg font-semibold text-foreground">Usuarios</h1>
           <p className="text-sm text-muted-foreground">
-            Quienes tienen acceso al sistema y con que rol.
+            Quiénes tienen acceso al sistema y con qué rol.
           </p>
         </div>
         {esAdmin && (
@@ -93,7 +93,7 @@ export default function Usuarios() {
       ) : data.length === 0 ? (
         <Vacio icono={UserRound} titulo="Sin usuarios" />
       ) : filtrados.length === 0 ? (
-        <Vacio icono={UserRound} titulo="Sin resultados" descripcion="Probá con otra busqueda." />
+        <Vacio icono={UserRound} titulo="Sin resultados" descripcion="Probá con otra búsqueda." />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full text-sm">

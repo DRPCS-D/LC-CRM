@@ -70,7 +70,7 @@ export default function Login() {
             />
           </Field>
 
-          <Field label="Contrasena">
+          <Field label="Contraseña">
             <Input
               type="password"
               value={password}

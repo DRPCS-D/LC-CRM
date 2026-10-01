@@ -24,8 +24,8 @@ export function CambiarMiPasswordModal({ abierto, onCerrar }: { abierto: boolean
   }, [abierto])
 
   async function onGuardar() {
-    if (password.length < 6) return setError('Minimo 6 caracteres.')
-    if (password !== confirmacion) return setError('Las contrasenas no coinciden.')
+    if (password.length < 6) return setError('Mínimo 6 caracteres.')
+    if (password !== confirmacion) return setError('Las contraseñas no coinciden.')
 
     setGuardando(true)
     setError(null)
@@ -44,10 +44,10 @@ export function CambiarMiPasswordModal({ abierto, onCerrar }: { abierto: boolean
         if (errSesion) await supabase.auth.signOut()
       }
 
-      toast.success('Contrasena actualizada')
+      toast.success('Contraseña actualizada')
       onCerrar()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo cambiar la contrasena.')
+      setError(e instanceof Error ? e.message : 'No se pudo cambiar la contraseña.')
     } finally {
       setGuardando(false)
     }
@@ -56,7 +56,7 @@ export function CambiarMiPasswordModal({ abierto, onCerrar }: { abierto: boolean
   return (
     <Modal
       abierto={abierto}
-      titulo="Cambiar mi contrasena"
+      titulo="Cambiar mi contraseña"
       onCerrar={onCerrar}
       ancho="max-w-sm"
       footer={
@@ -71,10 +71,10 @@ export function CambiarMiPasswordModal({ abierto, onCerrar }: { abierto: boolean
       }
     >
       <div className="space-y-4">
-        <Field label="Nueva contrasena" hint="Minimo 6 caracteres">
+        <Field label="Nueva contraseña" hint="Mínimo 6 caracteres">
           <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus />
         </Field>
-        <Field label="Repetir contrasena">
+        <Field label="Repetir contraseña">
           <Input type="password" value={confirmacion} onChange={(e) => setConfirmacion(e.target.value)} />
         </Field>
         {error && <ErrorBox mensaje={error} />}

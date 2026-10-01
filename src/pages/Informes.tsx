@@ -79,9 +79,9 @@ type EstadoUbicacion =
   | { tipo: 'error'; mensaje: string }
 
 const MENSAJE_GEO: Record<number, string> = {
-  1: 'Permiso de ubicacion denegado. Habilitalo en los ajustes del navegador y toca Reintentar.',
-  2: 'No se pudo determinar la ubicacion. Sali a un lugar abierto y toca Reintentar.',
-  3: 'Se agoto el tiempo buscando la ubicacion. Toca Reintentar.',
+  1: 'Permiso de ubicación denegado. Habilitalo en los ajustes del navegador y tocá Reintentar.',
+  2: 'No se pudo determinar la ubicación. Salí a un lugar abierto y tocá Reintentar.',
+  3: 'Se agotó el tiempo buscando la ubicación. Tocá Reintentar.',
 }
 
 function pedirPosicion(alta: boolean): Promise<GeolocationPosition> {
@@ -100,7 +100,7 @@ function pedirPosicion(alta: boolean): Promise<GeolocationPosition> {
  * casi siempre disponible bajo techo).
  */
 async function obtenerUbicacion(): Promise<Ubicacion> {
-  if (!('geolocation' in navigator)) throw new Error('Este dispositivo no permite obtener la ubicacion.')
+  if (!('geolocation' in navigator)) throw new Error('Este dispositivo no permite obtener la ubicación.')
   const aUbicacion = (p: GeolocationPosition, fuente: Ubicacion['fuente']): Ubicacion => ({
     lat: p.coords.latitude,
     lng: p.coords.longitude,
@@ -173,7 +173,7 @@ function NuevoInforme() {
       buscarUbicacion()
     } catch (e) {
       if (e instanceof Error && e.message === 'timeout') {
-        toast.error('La conexion esta lenta y no se pudo confirmar el guardado. Revisa la lista antes de reintentar.', { duration: 8000 })
+        toast.error('La conexión está lenta y no se pudo confirmar el guardado. Revisá la lista antes de reintentar.', { duration: 8000 })
       } else {
         toast.error(mensajeDeError(e as { message?: string }, 'No se pudo guardar el informe.'))
       }
@@ -200,8 +200,8 @@ function NuevoInforme() {
             <div className="flex min-w-0 items-start gap-2.5">
               <LocateFixed className={cn('mt-0.5 size-5 shrink-0', lista ? 'text-success' : ubicacion.tipo === 'error' ? 'text-destructive' : 'text-muted-foreground')} />
               <div className="min-w-0 text-sm">
-                <p className="font-medium text-foreground">Ubicacion de la visita</p>
-                {ubicacion.tipo === 'buscando' && <p className="text-muted-foreground">Buscando ubicacion…</p>}
+                <p className="font-medium text-foreground">Ubicación de la visita</p>
+                {ubicacion.tipo === 'buscando' && <p className="text-muted-foreground">Buscando ubicación…</p>}
                 {ubicacion.tipo === 'lista' && (
                   <p className="tabular text-muted-foreground">
                     {ubicacion.ubicacion.lat.toFixed(6)}, {ubicacion.ubicacion.lng.toFixed(6)}
@@ -219,7 +219,7 @@ function NuevoInforme() {
 
         <label className="flex items-start gap-2.5 text-sm">
           <input type="checkbox" checked={actualizar} onChange={(e) => setActualizar(e.target.checked)} className="mt-0.5 size-4 accent-[var(--primary)]" />
-          <span>Actualizar la ubicacion del cliente con esta visita</span>
+          <span>Actualizar la ubicación del cliente con esta visita</span>
         </label>
 
         <Button size="lg" className="w-full" onClick={guardar} disabled={!cliente || !lista || guardando}>
@@ -227,7 +227,7 @@ function NuevoInforme() {
         </Button>
         {(!cliente || !lista) && (
           <p className="-mt-2 text-center text-xs text-muted-foreground">
-            {!cliente ? 'Elegi un cliente para poder guardar.' : 'Hace falta la ubicacion para poder guardar.'}
+            {!cliente ? 'Elegí un cliente para poder guardar.' : 'Hace falta la ubicación para poder guardar.'}
           </p>
         )}
       </CardBody>
@@ -387,7 +387,7 @@ function ListaInformes() {
 
   function exportarCSV() {
     const filas = filtrados.map((i) => [formatFechaHora(i.created_at), i.cliente_nombre, i.cliente_codigo, i.ciudad, i.zona, i.comentario, autorDe(i)])
-    descargarCSV(`informes_${marcaDeTiempo()}.csv`, [['Fecha', 'Cliente', 'Codigo Cliente', 'Ciudad', 'Zona', 'Comentario', 'Usuario'], ...filas])
+    descargarCSV(`informes_${marcaDeTiempo()}.csv`, [['Fecha', 'Cliente', 'Código Cliente', 'Ciudad', 'Zona', 'Comentario', 'Usuario'], ...filas])
   }
 
   const [exportando, setExportando] = useState(false)
@@ -428,7 +428,7 @@ function ListaInformes() {
       ) : error ? (
         <ErrorBox mensaje={error} />
       ) : filtrados.length === 0 ? (
-        <Vacio icono={MapPinned} titulo={data.length === 0 ? 'Todavia no hay informes' : 'Sin resultados'} />
+        <Vacio icono={MapPinned} titulo={data.length === 0 ? 'Todavía no hay informes' : 'Sin resultados'} />
       ) : (
         <div className="overflow-hidden rounded-lg border border-border bg-card">
           <div className="overflow-x-auto">
@@ -441,7 +441,7 @@ function ListaInformes() {
                   <Th campo="zona" {...th} className="hidden lg:table-cell">Zona</Th>
                   <Th className="hidden md:table-cell">Comentario</Th>
                   <Th campo="usuario" {...th} className="hidden sm:table-cell">Usuario</Th>
-                  <Th>Ubicacion</Th>
+                  <Th>Ubicación</Th>
                 </tr>
               </thead>
               <tbody>
@@ -511,7 +511,7 @@ function InformeDetalleModal({
   if (!informe) return null
 
   async function guardar() {
-    if (!informe || !cliente) return setError('Elegi un cliente.')
+    if (!informe || !cliente) return setError('Elegí un cliente.')
     setProcesando(true)
     setError(null)
     const { data, error: err } = await supabase
@@ -564,7 +564,7 @@ function InformeDetalleModal({
           <div className="space-y-4">
             <Field label="Cliente *"><ClienteSelector clientes={clientes} valor={cliente} onCambiar={setCliente} /></Field>
             <Field label="Comentario"><Textarea value={comentario} onChange={(e) => setComentario(e.target.value)} rows={4} /></Field>
-            <p className="text-xs text-muted-foreground">La ubicacion de la visita no se puede modificar.</p>
+            <p className="text-xs text-muted-foreground">La ubicación de la visita no se puede modificar.</p>
             {error && <ErrorBox mensaje={error} />}
           </div>
         ) : (

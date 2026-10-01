@@ -49,7 +49,7 @@ async function decodificar(blob: Blob): Promise<ImageBitmap> {
     // `from-image` respeta la orientacion EXIF de las fotos de celular.
     return await createImageBitmap(blob, { imageOrientation: 'from-image' })
   } catch {
-    throw new Error('No se pudo leer la imagen. Proba con otro archivo.')
+    throw new Error('No se pudo leer la imagen. Probá con otro archivo.')
   }
 }
 

@@ -61,7 +61,7 @@ export function Buscador({
           type="button"
           onClick={() => onCambiar('')}
           className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
-          aria-label="Limpiar busqueda"
+          aria-label="Limpiar búsqueda"
         >
           <X className="size-3.5" />
         </button>

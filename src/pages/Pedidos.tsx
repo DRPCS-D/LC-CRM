@@ -218,7 +218,7 @@ function NuevoPedido() {
       }))
       setInvalidos([])
       if (coincidencias.length === 1) toast.success('Datos cargados. Cliente seleccionado.')
-      else toast.success(nombre ? `Datos cargados. Elegi el cliente ("${nombre}") de la lista.` : 'Datos cargados. Elegi el cliente de la lista.')
+      else toast.success(nombre ? `Datos cargados. Elegí el cliente ("${nombre}") de la lista.` : 'Datos cargados. Elegí el cliente de la lista.')
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'No se pudo leer la imagen.')
     } finally {
@@ -277,7 +277,7 @@ function NuevoPedido() {
       }
     } catch (e) {
       if (e instanceof TimeoutGuardado) {
-        toast.error('La conexion esta lenta y no se pudo confirmar el guardado. Revisa la lista de pedidos antes de reintentar.', { duration: 8000 })
+        toast.error('La conexión está lenta y no se pudo confirmar el guardado. Revisá la lista de pedidos antes de reintentar.', { duration: 8000 })
       } else if (e instanceof Error && !('code' in e)) {
         toast.error(e.message)
       } else {
@@ -432,7 +432,7 @@ function NuevoPedido() {
                 <li key={p.id}>{p.cliente_nombre ?? 'Sin cliente'} — {formatFechaHora(p.created_at)}</li>
               ))}
             </ul>
-            <p>¿Queres guardarlo de todas formas?</p>
+            <p>¿Querés guardarlo de todas formas?</p>
           </div>
         }
         onCancelar={() => setDuplicados(null)}
@@ -558,7 +558,7 @@ function ListaPedidos() {
   }, [loading, repetidos])
 
   function exportar() {
-    const cabecera = ['Fecha Carga', 'N° Orden', 'Codigo Cliente', 'Cliente', 'RUC', 'N° Pedido', 'Entrega', 'Direccion', 'Ciudad', 'Zona', 'Forma Pago', 'Tipo', 'Marca', 'Total Pares', 'Total Precio', 'OBS', 'Usuario']
+    const cabecera = ['Fecha Carga', 'N° Orden', 'Código Cliente', 'Cliente', 'RUC', 'N° Pedido', 'Entrega', 'Dirección', 'Ciudad', 'Zona', 'Forma Pago', 'Tipo', 'Marca', 'Total Pares', 'Total Precio', 'OBS', 'Usuario']
     const filas = filtrados.map((p) => [
       formatFechaHora(p.created_at), p.nro_orden, p.cliente_codigo, p.cliente_nombre, p.ruc, p.nro_pedido, p.entrega,
       p.direccion, p.ciudad, p.zona, p.forma_pago, p.tipo, p.marca, p.total_pares, p.total_precio, p.obs, autorDe(p),
@@ -625,7 +625,7 @@ function ListaPedidos() {
       ) : error ? (
         <ErrorBox mensaje={error} />
       ) : filtrados.length === 0 ? (
-        <Vacio icono={ClipboardList} titulo={data.length === 0 ? 'Todavia no hay pedidos' : 'Sin resultados'} descripcion={data.length === 0 ? undefined : 'Proba con otros filtros.'} />
+        <Vacio icono={ClipboardList} titulo={data.length === 0 ? 'Todavía no hay pedidos' : 'Sin resultados'} descripcion={data.length === 0 ? undefined : 'Proba con otros filtros.'} />
       ) : (
         <div className="overflow-hidden rounded-lg border border-border bg-card">
           <div className="overflow-x-auto">

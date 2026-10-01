@@ -132,7 +132,7 @@ export function MultiSelect({
                   onClick={() => onCambiar([])}
                   className="w-full rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
                 >
-                  Quitar seleccion
+                  Quitar selección
                 </button>
               </div>
             )}

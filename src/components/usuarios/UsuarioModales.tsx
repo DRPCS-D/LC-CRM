@@ -144,7 +144,7 @@ export function NuevoUsuarioModal({
     const u = username.trim().toLowerCase()
     if (!USERNAME_VALIDO.test(u)) return setError(MENSAJE_USERNAME)
     if (password.length < LARGO_MINIMO_PASSWORD) {
-      return setError(`La contrasena necesita al menos ${LARGO_MINIMO_PASSWORD} caracteres.`)
+      return setError(`La contraseña necesita al menos ${LARGO_MINIMO_PASSWORD} caracteres.`)
     }
 
     setGuardando(true)
@@ -172,13 +172,13 @@ export function NuevoUsuarioModal({
     >
       <div className="space-y-4">
         <SelectorDeFoto nombre={username} nueva={foto} quitar={false} onNueva={setFoto} onQuitar={() => {}} />
-        <Field label="Usuario *" hint="Es lo que escribe para iniciar sesion.">
+        <Field label="Usuario *" hint="Es lo que escribe para iniciar sesión.">
           <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoComplete="off" autoCapitalize="none" spellCheck={false} autoFocus />
         </Field>
-        <Field label="Nombre" hint="Opcional. Si se deja vacio se usa el usuario.">
+        <Field label="Nombre" hint="Opcional. Si se deja vacío se usa el usuario.">
           <Input value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="off" />
         </Field>
-        <Field label="Contrasena *" hint={`Minimo ${LARGO_MINIMO_PASSWORD} caracteres`}>
+        <Field label="Contraseña *" hint={`Mínimo ${LARGO_MINIMO_PASSWORD} caracteres`}>
           <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
         </Field>
         <SelectorDeRol valor={rol} onCambiar={setRol} />
@@ -258,7 +258,7 @@ export function UsuarioDetalleModal({
         {puedeEditar && (
           <p className="text-xs text-muted-foreground">
             {esYo
-              ? 'Es tu propia cuenta: no podes desactivarla ni eliminarla.'
+              ? 'Es tu propia cuenta: no podés desactivarla ni eliminarla.'
               : `Toca el estado para ${usuario.activo ? 'desactivar' : 'activar'} la cuenta.`}
           </p>
         )}
@@ -311,7 +311,7 @@ export function EditarUsuarioModal({
     // Vacia = no se cambia. Se valida antes de escribir nada, para no dejar
     // guardados los datos y fallar recien en la contrasena.
     if (password && password.length < LARGO_MINIMO_PASSWORD) {
-      return setError(`La contrasena necesita al menos ${LARGO_MINIMO_PASSWORD} caracteres.`)
+      return setError(`La contraseña necesita al menos ${LARGO_MINIMO_PASSWORD} caracteres.`)
     }
 
     setGuardando(true)
@@ -369,7 +369,7 @@ export function EditarUsuarioModal({
     }
 
     setGuardando(false)
-    toast.success(password ? 'Datos y contrasena actualizados' : 'Datos actualizados')
+    toast.success(password ? 'Datos y contraseña actualizados' : 'Datos actualizados')
     onGuardado()
   }
 
@@ -387,7 +387,7 @@ export function EditarUsuarioModal({
     >
       <div className="space-y-4">
         <SelectorDeFoto nombre={username} fotoActual={usuario?.foto_path} nueva={foto} quitar={quitarFoto} onNueva={setFoto} onQuitar={setQuitarFoto} />
-        <Field label="Usuario *" hint="Es lo que escribe para iniciar sesion: cambiarlo cambia su login.">
+        <Field label="Usuario *" hint="Es lo que escribe para iniciar sesión: cambiarlo cambia su login.">
           <Input value={username} onChange={(e) => setUsername(e.target.value.toLowerCase())} autoCapitalize="none" spellCheck={false} autoFocus />
         </Field>
         <Field label="Nombre">
@@ -397,9 +397,9 @@ export function EditarUsuarioModal({
           valor={rol}
           onCambiar={setRol}
           deshabilitado={esYo}
-          hint={esYo ? 'No podes cambiarte el rol a vos mismo.' : undefined}
+          hint={esYo ? 'No podés cambiarte el rol a vos mismo.' : undefined}
         />
-        <Field label="Nueva contrasena" hint={`Dejala vacia para no cambiarla. Minimo ${LARGO_MINIMO_PASSWORD} caracteres.`}>
+        <Field label="Nueva contraseña" hint={`Dejala vacía para no cambiarla. Mínimo ${LARGO_MINIMO_PASSWORD} caracteres.`}>
           <Input
             type="password"
             value={password}

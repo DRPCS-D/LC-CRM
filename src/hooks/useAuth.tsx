@@ -142,8 +142,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const esCredencial = /invalid login|credentials/i.test(error.message)
       return {
         error: esCredencial
-          ? 'Usuario o contrasena incorrectos.'
-          : 'No se pudo iniciar sesion. Intentalo de nuevo.',
+          ? 'Usuario o contraseña incorrectos.'
+          : 'No se pudo iniciar sesión. Intentalo de nuevo.',
       }
     }
     return { error: null }

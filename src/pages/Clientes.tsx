@@ -98,7 +98,7 @@ function ListaClientes() {
         <Buscador
           valor={busqueda}
           onCambiar={setBusqueda}
-          placeholder="Buscar por codigo, nombre, ciudad o zona…"
+          placeholder="Buscar por código, nombre, ciudad o zona…"
           className="w-full sm:max-w-sm"
         />
         <MultiSelect label="Ciudad" opciones={opcionesDe(data, (c) => c.ciudad)} seleccion={ciudades} onCambiar={setCiudades} className="w-44" />
@@ -115,15 +115,15 @@ function ListaClientes() {
       ) : error ? (
         <ErrorBox mensaje={error} />
       ) : filtrados.length === 0 ? (
-        <Vacio icono={Store} titulo={data.length === 0 ? 'Todavia no hay clientes' : 'Sin resultados'} />
+        <Vacio icono={Store} titulo={data.length === 0 ? 'Todavía no hay clientes' : 'Sin resultados'} />
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                <th className="px-3 py-2.5 font-medium">Codigo</th>
-                <th className="px-3 py-2.5 font-medium">Razon social</th>
-                <th className="hidden px-3 py-2.5 font-medium sm:table-cell">Nombre fantasia</th>
+                <th className="px-3 py-2.5 font-medium">Código</th>
+                <th className="px-3 py-2.5 font-medium">Razón social</th>
+                <th className="hidden px-3 py-2.5 font-medium sm:table-cell">Nombre fantasía</th>
                 <th className="hidden px-3 py-2.5 font-medium md:table-cell">Ciudad</th>
                 <th className="hidden px-3 py-2.5 font-medium md:table-cell">Zona</th>
               </tr>
@@ -383,8 +383,8 @@ function ClienteFormModal({
       ciudad: form.ciudad?.trim() || null,
       zona: form.zona?.trim() || null,
     }
-    if (!payload.codigo) return setError('El codigo es obligatorio.')
-    if (payload.razon_social.length < 2) return setError('La razon social necesita al menos 2 caracteres.')
+    if (!payload.codigo) return setError('El código es obligatorio.')
+    if (payload.razon_social.length < 2) return setError('La razón social necesita al menos 2 caracteres.')
 
     setGuardando(true)
     setError(null)
@@ -410,13 +410,13 @@ function ClienteFormModal({
       }
     >
       <div className="space-y-4">
-        <Field label="Codigo *" hint="Identifica al cliente. No puede repetirse.">
+        <Field label="Código *" hint="Identifica al cliente. No puede repetirse.">
           <Input value={form.codigo} onChange={set('codigo')} autoFocus autoComplete="off" />
         </Field>
-        <Field label="Razon social *">
+        <Field label="Razón social *">
           <Input value={form.razon_social} onChange={set('razon_social')} autoComplete="off" />
         </Field>
-        <Field label="Nombre fantasia">
+        <Field label="Nombre fantasía">
           <Input value={form.nombre_fantasia ?? ''} onChange={set('nombre_fantasia')} autoComplete="off" />
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -470,7 +470,7 @@ function MapaClientes() {
             onCambiar={(c) => {
               setSeleccion(c)
               if (!c) return setEnfocar(null)
-              if (c.lat === null || c.lng === null) return void toast.info('Ese cliente todavia no tiene ubicacion. Se guarda con su primera visita.')
+              if (c.lat === null || c.lng === null) return void toast.info('Ese cliente todavía no tiene ubicación. Se guarda con su primera visita.')
               setEnfocar(c.id)
             }}
           />

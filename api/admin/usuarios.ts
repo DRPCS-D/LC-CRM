@@ -225,7 +225,7 @@ const handler: ApiHandler = async (req, res) => {
       }
 
       const { error: errUpd } = await admin.auth.admin.updateUserById(body.id, { password })
-      if (errUpd) return error(res, 400, 'No se pudo cambiar la contrasena.')
+      if (errUpd) return error(res, 400, 'No se pudo cambiar la contraseña.')
 
       res.status(200).json({ ok: true })
       return
@@ -240,7 +240,7 @@ const handler: ApiHandler = async (req, res) => {
     // (`on delete set null`). Por eso conviene desactivar antes que borrar.
     case 'eliminar': {
       if (!body.id) return error(res, 400, 'Falta el usuario.')
-      if (body.id === actor.id) return error(res, 400, 'No podes eliminar tu propia cuenta.')
+      if (body.id === actor.id) return error(res, 400, 'No podés eliminar tu propia cuenta.')
 
       const { data: objetivo } = await admin
         .from('usuarios')

@@ -24,7 +24,7 @@ export async function getAccessToken(): Promise<string | null> {
 /** Wrapper de fetch que adjunta el JWT de Supabase a las funciones serverless. */
 export async function apiFetch<T>(path: string, body?: unknown): Promise<T> {
   const token = await getAccessToken()
-  if (!token) throw new Error('Sesion expirada. Volve a iniciar sesion.')
+  if (!token) throw new Error('Sesión expirada. Volvé a iniciar sesión.')
 
   const res = await fetch(path, {
     method: body === undefined ? 'GET' : 'POST',
@@ -44,7 +44,7 @@ export async function apiFetch<T>(path: string, body?: unknown): Promise<T> {
     // llegue a correr la funcion, y contesta con HTML: no hay JSON que
     // parsear ni mensaje propio que mostrar.
     if (res.status === 413) throw new Error('El contenido enviado es demasiado grande.')
-    throw new Error(`Respuesta invalida del servidor (${res.status})`)
+    throw new Error(`Respuesta inválida del servidor (${res.status})`)
   }
 
   if (res.status === 401) {
@@ -52,7 +52,7 @@ export async function apiFetch<T>(path: string, body?: unknown): Promise<T> {
     // contrasena desde otro lado). Se cierra para que la app lleve al login en
     // vez de dejar pantallas que fallan una a una con "No autenticado".
     await supabase.auth.signOut()
-    throw new Error('Tu sesion expiro. Volve a iniciar sesion.')
+    throw new Error('Tu sesión expiró. Volvé a iniciar sesión.')
   }
 
   if (!res.ok) {

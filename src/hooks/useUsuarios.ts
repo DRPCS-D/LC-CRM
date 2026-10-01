@@ -111,7 +111,7 @@ export function useUsuarios() {
       await apiFetch('/api/admin/usuarios', { accion: 'password', id, password })
       return { error: null }
     } catch (e) {
-      return { error: e instanceof Error ? e.message : 'Error al cambiar la contrasena.' }
+      return { error: e instanceof Error ? e.message : 'Error al cambiar la contraseña.' }
     }
   }
 
@@ -128,10 +128,10 @@ export function useUsuarios() {
 function mensajeDePostgrest(mensaje: string | undefined): string | null {
   if (!mensaje) return null
   if (/row-level security/i.test(mensaje)) {
-    return 'No podes quitarte a vos mismo el acceso de administrador.'
+    return 'No podés quitarte a vos mismo el acceso de administrador.'
   }
   if (/permission denied/i.test(mensaje)) {
-    return 'No tenes permiso para esta operacion.'
+    return 'No tenés permiso para esta operación.'
   }
   return 'No se pudo guardar el cambio.'
 }

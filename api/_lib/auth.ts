@@ -81,7 +81,7 @@ export async function exigeAdmin(
   const perfil = await exigeUsuario(req, res)
   if (!perfil) return null
   if (perfil.rol !== 'admin') {
-    error(res, 403, 'No tenes permiso para esta operacion.')
+    error(res, 403, 'No tenés permiso para esta operación.')
     return null
   }
   return perfil

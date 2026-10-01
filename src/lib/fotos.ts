@@ -51,7 +51,7 @@ export async function subirFotoPedido(blob: Blob, usuarioId: string): Promise<st
   const { error } = await supabase.storage
     .from('pedidos')
     .upload(path, blob, { contentType: 'image/jpeg' })
-  if (error) throw new Error('No se pudo subir la foto. Revisa la conexion e intenta de nuevo.')
+  if (error) throw new Error('No se pudo subir la foto. Revisá la conexión e intentá de nuevo.')
   return path
 }
 
