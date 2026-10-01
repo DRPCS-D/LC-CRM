@@ -234,3 +234,16 @@
     margin: 12mm;
   }
 }
+
+/* ── Avisos (sonner) sobre la barra de navegacion del celular ──
+   La barra inferior (#nav-inferior, solo por debajo de md) mide ~56 px mas la
+   zona segura del equipo. Sin esto los avisos salen debajo y la tapan.
+   sonner posiciona con --offset-bottom y, en pantallas de hasta 600 px, con
+   --mobile-offset-bottom: se pisan las dos. `:has()` limita el cambio a las
+   pantallas que de verdad tienen la barra (el login no la tiene). */
+@media (max-width: 767px) {
+  body:has(#nav-inferior) [data-sonner-toaster] {
+    --offset-bottom: calc(68px + env(safe-area-inset-bottom)) !important;
+    --mobile-offset-bottom: calc(68px + env(safe-area-inset-bottom)) !important;
+  }
+}

@@ -132,6 +132,7 @@ export default function AppLayout() {
 
       {/* Navegacion en mobile: barra fija abajo, al alcance del pulgar */}
       <nav
+        id="nav-inferior"
         className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-card/95 backdrop-blur md:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
