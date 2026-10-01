@@ -294,7 +294,7 @@ function BotonesRango({ onCambiar }: { onCambiar: (p: Partial<FiltrosInforme>) =
 
   return (
     <div className="flex flex-wrap gap-2">
-      {([['Todo', 'todo'], ['Hoy', 0], ['Ultimos 7 dias', 7], ['Este mes', 'mes']] as const).map(([label, v]) => (
+      {([['Todo', 'todo'], ['Hoy', 0], ['Semana', 7], ['Este mes', 'mes']] as const).map(([label, v]) => (
         <Button key={label} variant="outline" size="sm" onClick={() => rango(v)}>{label}</Button>
       ))}
     </div>
