@@ -459,7 +459,6 @@ interface Filtros {
   hasta: string
   orden: Orden<CampoOrden>
   pagina: number
-  panel: boolean
 }
 
 const FILTROS_INICIALES: Filtros = {
@@ -473,7 +472,6 @@ const FILTROS_INICIALES: Filtros = {
   hasta: '',
   orden: { campo: 'fecha', dir: 'desc' },
   pagina: 1,
-  panel: false,
 }
 
 function valorOrden(p: Pedido, campo: CampoOrden): unknown {
@@ -492,6 +490,9 @@ function ListaPedidos() {
   const { veTodo } = useAuth()
   const { data, loading, actualizando, error, refetch } = usePedidos()
   const [f, setF] = useEstadoSesion<Filtros>('pedidos.filtros', FILTROS_INICIALES)
+  // Plegado/desplegado vive aparte de los filtros: los valores se recuerdan al
+  // cambiar de pantalla (sessionStorage), pero el panel arranca siempre plegado.
+  const [panel, setPanel] = useState(false)
   const [abierto, setAbierto] = useState<Pedido | null>(null)
 
   // Cualquier cambio de filtro vuelve a la primera pagina
@@ -571,7 +572,7 @@ function ListaPedidos() {
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <Buscador valor={f.busqueda} onCambiar={(busqueda) => cambiar({ busqueda })} placeholder="Buscar cliente, N° orden, marca…" className="w-full sm:max-w-sm" />
-        <Button variant="outline" onClick={() => cambiar({ panel: !f.panel })} className="relative">
+        <Button variant="outline" onClick={() => setPanel((a) => !a)} className="relative">
           <ListFilter /> Filtros
           {nFiltros > 0 && <span className="ml-0.5 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">{nFiltros}</span>}
         </Button>
@@ -583,7 +584,7 @@ function ListaPedidos() {
         </div>
       </div>
 
-      {f.panel && (
+      {panel && (
         <Card className="mb-4">
           <CardBody className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MultiSelect label="Cliente" opciones={opciones.clientes} seleccion={f.clientes} onCambiar={(clientes) => cambiar({ clientes })} />

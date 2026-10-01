@@ -357,7 +357,6 @@ type CampoOrden = 'fecha' | 'cliente' | 'ciudad' | 'zona' | 'usuario'
 interface Estado extends FiltrosInforme {
   orden: Orden<CampoOrden>
   pagina: number
-  panel: boolean
 }
 
 function valorOrden(i: Informe, c: CampoOrden): unknown {
@@ -372,7 +371,10 @@ function valorOrden(i: Informe, c: CampoOrden): unknown {
 
 function ListaInformes() {
   const { data, loading, actualizando, error, refetch } = useInformes()
-  const [e, setE] = useEstadoSesion<Estado>('informes.filtros', { ...FILTROS_VACIOS, orden: { campo: 'fecha', dir: 'desc' }, pagina: 1, panel: false })
+  const [e, setE] = useEstadoSesion<Estado>('informes.filtros', { ...FILTROS_VACIOS, orden: { campo: 'fecha', dir: 'desc' }, pagina: 1 })
+  // Plegado/desplegado vive aparte de los filtros: los valores se recuerdan al
+  // cambiar de pantalla (sessionStorage), pero el panel arranca siempre plegado.
+  const [panel, setPanel] = useState(false)
   const [abierto, setAbierto] = useState<Informe | null>(null)
 
   const cambiar = (p: Partial<Estado>) => setE((s) => ({ ...s, pagina: 1, ...p }))
@@ -405,7 +407,7 @@ function ListaInformes() {
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <Buscador valor={e.busqueda} onCambiar={(busqueda) => cambiar({ busqueda })} placeholder="Buscar cliente, comentario, usuario…" className="w-full sm:max-w-sm" />
-        <BotonFiltros f={e} abierto={e.panel} onAlternar={() => cambiar({ panel: !e.panel })} />
+        <BotonFiltros f={e} abierto={panel} onAlternar={() => setPanel((a) => !a)} />
         <div className="ml-auto flex gap-2">
           <Button variant="outline" onClick={exportarPDF} disabled={filtrados.length === 0 || exportando}>
             {exportando ? <Loader2 className="animate-spin" /> : <Download />} PDF
@@ -417,7 +419,7 @@ function ListaInformes() {
         </div>
       </div>
 
-      {e.panel && <PanelFiltros data={data} f={e} onCambiar={cambiar} />}
+      {panel && <PanelFiltros data={data} f={e} onCambiar={cambiar} />}
 
       <div className="mb-4 max-w-xs"><Kpi titulo="Visitas (filtradas)" valor={filtrados.length} /></div>
 
