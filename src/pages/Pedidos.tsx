@@ -347,10 +347,10 @@ function NuevoPedido() {
               )}
             </button>
             <div className="grid grid-cols-2 gap-3">
-              <Button type="button" variant="outline" size="lg" disabled={procesando} onClick={() => camaraRef.current?.click()}>
+              <Button type="button" size="lg" disabled={procesando} onClick={() => camaraRef.current?.click()}>
                 <Camera /> Cámara
               </Button>
-              <Button type="button" variant="outline" size="lg" disabled={procesando} onClick={() => galeriaRef.current?.click()}>
+              <Button type="button" size="lg" disabled={procesando} onClick={() => galeriaRef.current?.click()}>
                 <Images /> Galería
               </Button>
             </div>
