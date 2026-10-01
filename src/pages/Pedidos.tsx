@@ -184,13 +184,6 @@ function NuevoPedido() {
     fotoSubida.current = null
   }
 
-  function limpiarTodo() {
-    quitarFoto()
-    setForm(FORM_VACIO)
-    setInvalidos([])
-    claveIntento.current = crypto.randomUUID()
-  }
-
   async function extraer() {
     if (!foto) return
     setExtrayendo(true)
@@ -410,9 +403,6 @@ function NuevoPedido() {
             <Button className="flex-1" size="lg" onClick={intentarGuardar} disabled={ocupado || clientes.length === 0}>
               {guardando === 'subiendo' ? <><Loader2 className="animate-spin" /> Subiendo foto…</> : guardando === 'guardando' ? <><Loader2 className="animate-spin" /> Guardando…</> : 'Guardar pedido'}
             </Button>
-            {(foto || form.nroOrden || form.cliente) && (
-              <Button size="lg" variant="outline" onClick={limpiarTodo} disabled={ocupado}>Limpiar</Button>
-            )}
           </div>
         </CardBody>
       </Card>
