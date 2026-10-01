@@ -1,4 +1,5 @@
 import {
+  CircleCheck,
   Download,
   FilePlus2,
   FileText,
@@ -200,14 +201,9 @@ function NuevoInforme() {
             <div className="flex min-w-0 items-start gap-2.5">
               <LocateFixed className={cn('mt-0.5 size-5 shrink-0', lista ? 'text-success' : ubicacion.tipo === 'error' ? 'text-destructive' : 'text-muted-foreground')} />
               <div className="min-w-0 text-sm">
-                <p className="font-medium text-foreground">Ubicación de la visita</p>
+                <p className="font-medium text-foreground">Ubicación</p>
                 {ubicacion.tipo === 'buscando' && <p className="text-muted-foreground">Buscando ubicación…</p>}
-                {ubicacion.tipo === 'lista' && (
-                  <p className="tabular text-muted-foreground">
-                    {ubicacion.ubicacion.lat.toFixed(6)}, {ubicacion.ubicacion.lng.toFixed(6)}
-                    <span className="block text-xs">±{ubicacion.ubicacion.precision} m · {ubicacion.ubicacion.fuente}</span>
-                  </p>
-                )}
+                {ubicacion.tipo === 'lista' && <CircleCheck className="size-5 text-success" aria-label="Ubicación obtenida" />}
                 {ubicacion.tipo === 'error' && <p className="text-destructive">{ubicacion.mensaje}</p>}
               </div>
             </div>
