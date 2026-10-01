@@ -270,16 +270,45 @@ function contarFiltros(f: FiltrosInforme): number {
   return f.clientes.length + f.usuarios.length + f.ciudades.length + f.zonas.length + (f.desde ? 1 : 0) + (f.hasta ? 1 : 0)
 }
 
+/** Boton "Filtros" con la cantidad de filtros activos, igual que en la tabla. */
+function BotonFiltros({ f, abierto, onAlternar }: { f: FiltrosInforme; abierto: boolean; onAlternar: () => void }) {
+  const n = contarFiltros(f)
+  return (
+    <Button variant="outline" onClick={onAlternar} aria-expanded={abierto}>
+      <ListFilter /> Filtros
+      {n > 0 && <span className="ml-0.5 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">{n}</span>}
+    </Button>
+  )
+}
+
+/** Atajos de fechas del mapa. Pisan Desde/Hasta; el resto de los filtros no se toca. */
+function BotonesRango({ onCambiar }: { onCambiar: (p: Partial<FiltrosInforme>) => void }) {
+  function rango(dias: number | 'mes' | 'todo') {
+    if (dias === 'todo') return onCambiar({ desde: '', hasta: '' })
+    const hoy = hoyLocal()
+    if (dias === 'mes') return onCambiar({ desde: hoy.slice(0, 8) + '01', hasta: '' })
+    const d = new Date()
+    d.setDate(d.getDate() - dias)
+    onCambiar({ desde: diaLocal(d), hasta: '' })
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {([['Todo', 'todo'], ['Hoy', 0], ['Ultimos 7 dias', 7], ['Este mes', 'mes']] as const).map(([label, v]) => (
+        <Button key={label} variant="outline" size="sm" onClick={() => rango(v)}>{label}</Button>
+      ))}
+    </div>
+  )
+}
+
 function PanelFiltros({
   data,
   f,
   onCambiar,
-  rapidos,
 }: {
   data: Informe[]
   f: FiltrosInforme
   onCambiar: (p: Partial<FiltrosInforme>) => void
-  rapidos?: boolean
 }) {
   const { veTodo } = useAuth()
   const opciones = useMemo(
@@ -292,25 +321,9 @@ function PanelFiltros({
     [data],
   )
 
-  function rango(dias: number | 'mes' | 'todo') {
-    if (dias === 'todo') return onCambiar({ desde: '', hasta: '' })
-    const hoy = hoyLocal()
-    if (dias === 'mes') return onCambiar({ desde: hoy.slice(0, 8) + '01', hasta: '' })
-    const d = new Date()
-    d.setDate(d.getDate() - dias)
-    onCambiar({ desde: diaLocal(d), hasta: '' })
-  }
-
   return (
     <Card className="mb-4">
       <CardBody className="space-y-4">
-        {rapidos && (
-          <div className="flex flex-wrap gap-2">
-            {([['Todo', 'todo'], ['Hoy', 0], ['Ultimos 7 dias', 7], ['Este mes', 'mes']] as const).map(([label, v]) => (
-              <Button key={label} variant="outline" size="sm" onClick={() => rango(v)}>{label}</Button>
-            ))}
-          </div>
-        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MultiSelect label="Cliente" opciones={opciones.clientes} seleccion={f.clientes} onCambiar={(clientes) => onCambiar({ clientes })} />
           {veTodo && <MultiSelect label="Usuario" opciones={opciones.usuarios} seleccion={f.usuarios} onCambiar={(usuarios) => onCambiar({ usuarios })} />}
@@ -368,7 +381,6 @@ function ListaInformes() {
   const paginas = Math.max(1, Math.ceil(filtrados.length / TAMANO_PAGINA))
   const pagina = Math.min(e.pagina, paginas)
   const visibles = filtrados.slice((pagina - 1) * TAMANO_PAGINA, pagina * TAMANO_PAGINA)
-  const nFiltros = contarFiltros(e)
   const th = { orden: e.orden, onOrdenar: (orden: Orden<CampoOrden>) => cambiar({ orden }) }
 
   function exportarCSV() {
@@ -393,10 +405,7 @@ function ListaInformes() {
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <Buscador valor={e.busqueda} onCambiar={(busqueda) => cambiar({ busqueda })} placeholder="Buscar cliente, comentario, usuario…" className="w-full sm:max-w-sm" />
-        <Button variant="outline" onClick={() => cambiar({ panel: !e.panel })}>
-          <ListFilter /> Filtros
-          {nFiltros > 0 && <span className="ml-0.5 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">{nFiltros}</span>}
-        </Button>
+        <BotonFiltros f={e} abierto={e.panel} onAlternar={() => cambiar({ panel: !e.panel })} />
         <div className="ml-auto flex gap-2">
           <Button variant="outline" onClick={exportarPDF} disabled={filtrados.length === 0 || exportando}>
             {exportando ? <Loader2 className="animate-spin" /> : <Download />} PDF
@@ -606,6 +615,7 @@ function InformeDetalleModal({
 function MapaInformes() {
   const { data, loading, error } = useInformes()
   const [f, setF] = useState<FiltrosInforme>(FILTROS_VACIOS)
+  const [panel, setPanel] = useState(false)
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const enfocar = params.get('informe')
@@ -637,11 +647,17 @@ function MapaInformes() {
 
   return (
     <div>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <BotonesRango onCambiar={(p) => setF((s) => ({ ...s, ...p }))} />
+        <div className="ml-auto">
+          <BotonFiltros f={f} abierto={panel} onAlternar={() => setPanel((a) => !a)} />
+        </div>
+      </div>
+      {panel && <PanelFiltros data={data} f={f} onCambiar={(p) => setF((s) => ({ ...s, ...p }))} />}
       <div className="mb-3 flex items-center justify-between gap-3">
         <span className="text-sm text-muted-foreground">{filtrados.length} visitas en el mapa</span>
         {enfocar && <Button variant="ghost" size="sm" onClick={() => navigate('/informes/mapa', { replace: true })}>Quitar enfoque</Button>}
       </div>
-      <PanelFiltros data={data} f={f} onCambiar={(p) => setF((s) => ({ ...s, ...p }))} rapidos />
       <Suspense fallback={<Cargando texto="Cargando mapa…" />}>
         <Mapa puntos={puntos} enfocar={enfocar} />
       </Suspense>
