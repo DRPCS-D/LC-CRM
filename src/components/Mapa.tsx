@@ -83,12 +83,14 @@ export default function Mapa({
 
   useEffect(() => {
     if (!contenedor.current) return
-    const m = L.map(contenedor.current, { zoomControl: true }).setView(PARAGUAY, 6)
+    const m = L.map(contenedor.current, { zoomControl: true, attributionControl: false }).setView(PARAGUAY, 6)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap',
     }).addTo(m)
     const cluster = L.markerClusterGroup({ iconCreateFunction: iconoCluster, showCoverageOnHover: false })
+    // Sin el prefijo "Leaflet"; la atribucion a OpenStreetMap se mantiene (lo exige su licencia).
+    L.control.attribution({ prefix: false }).addTo(m)
     m.addLayer(cluster)
     mapa.current = m
     capa.current = cluster

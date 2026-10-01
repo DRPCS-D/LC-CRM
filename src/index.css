@@ -247,3 +247,10 @@
     --mobile-offset-bottom: calc(68px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* Atribucion del mapa: chica y discreta */
+.leaflet-control-attribution {
+  font-size: 9px;
+  line-height: 1.2;
+  padding: 0 4px;
+}
