@@ -1,4 +1,4 @@
-import { KeyRound, Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Avatar } from '@/components/ui/avatar'
@@ -193,7 +193,6 @@ export function UsuarioDetalleModal({
   puedeEditar,
   onCerrar,
   onEditar,
-  onCambiarPassword,
   onEliminar,
   onToggleActivo,
 }: {
@@ -204,7 +203,6 @@ export function UsuarioDetalleModal({
   puedeEditar: boolean
   onCerrar: () => void
   onEditar: () => void
-  onCambiarPassword: () => void
   onEliminar: () => void
   onToggleActivo: () => void
 }) {
@@ -224,9 +222,6 @@ export function UsuarioDetalleModal({
                 <Trash2 className="text-destructive" /> Eliminar
               </Button>
             )}
-            <Button variant="outline" onClick={onCambiarPassword}>
-              <KeyRound /> Contrasena
-            </Button>
             <Button onClick={onEditar}>
               <Pencil /> Editar
             </Button>
@@ -278,6 +273,7 @@ export function EditarUsuarioModal({
   onGuardado,
   editar,
   cambiarRol,
+  cambiarPassword,
 }: {
   usuario: Usuario | null
   esYo: boolean
@@ -285,12 +281,14 @@ export function EditarUsuarioModal({
   onGuardado: () => void
   editar: ReturnType<typeof useUsuarios>['editar']
   cambiarRol: ReturnType<typeof useUsuarios>['cambiarRol']
+  cambiarPassword: ReturnType<typeof useUsuarios>['cambiarPassword']
 }) {
   const [username, setUsername] = useState('')
   const [nombre, setNombre] = useState('')
   const [rol, setRol] = useState<Rol>('vendedor')
   const [foto, setFoto] = useState<Blob | null>(null)
   const [quitarFoto, setQuitarFoto] = useState(false)
+  const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
 
@@ -301,6 +299,7 @@ export function EditarUsuarioModal({
     setRol(usuario.rol)
     setFoto(null)
     setQuitarFoto(false)
+    setPassword('')
     setError(null)
   }, [usuario])
 
@@ -308,13 +307,18 @@ export function EditarUsuarioModal({
     if (!usuario) return
     const u = username.trim().toLowerCase()
     if (!USERNAME_VALIDO.test(u)) return setError(MENSAJE_USERNAME)
+    // Vacia = no se cambia. Se valida antes de escribir nada, para no dejar
+    // guardados los datos y fallar recien en la contrasena.
+    if (password && password.length < LARGO_MINIMO_PASSWORD) {
+      return setError(`La contrasena necesita al menos ${LARGO_MINIMO_PASSWORD} caracteres.`)
+    }
 
     setGuardando(true)
     setError(null)
 
-    // Dos escrituras por caminos distintos: username/nombre/foto van por /api
-    // (tocan auth.users y el bucket) y el rol va directo a PostgREST. Si la
-    // primera falla no se intenta la segunda, para no dejar el cambio a medias.
+    // Hasta tres escrituras por caminos distintos: username/nombre/foto y la
+    // contrasena van por /api (tocan auth.users y el bucket) y el rol va
+    // directo a PostgREST. Si una falla no se intenta la siguiente.
     const { error: errDatos } = await editar({
       id: usuario.id,
       username: u,
@@ -337,8 +341,20 @@ export function EditarUsuarioModal({
       }
     }
 
+    // La contrasena va al final: los datos ya quedaron guardados y, si esto
+    // falla, hay que decirlo (cerrando el modal para que se vea el cambio).
+    if (password) {
+      const { error: errPass } = await cambiarPassword(usuario.id, password)
+      if (errPass) {
+        setGuardando(false)
+        toast.error(`Los datos se guardaron, pero no se pudo cambiar la contrasena: ${errPass}`)
+        onGuardado()
+        return
+      }
+    }
+
     setGuardando(false)
-    toast.success('Datos actualizados')
+    toast.success(password ? 'Datos y contrasena actualizados' : 'Datos actualizados')
     onGuardado()
   }
 
@@ -368,61 +384,24 @@ export function EditarUsuarioModal({
           deshabilitado={esYo}
           hint={esYo ? 'No podes cambiarte el rol a vos mismo.' : undefined}
         />
-        {error && <ErrorBox mensaje={error} />}
-      </div>
-    </Modal>
-  )
-}
-
-export function CambiarPasswordModal({
-  usuario,
-  onCerrar,
-  cambiarPassword,
-}: {
-  usuario: { id: string; username: string } | null
-  onCerrar: () => void
-  cambiarPassword: ReturnType<typeof useUsuarios>['cambiarPassword']
-}) {
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [guardando, setGuardando] = useState(false)
-
-  useEffect(() => {
-    setPassword('')
-    setError(null)
-  }, [usuario])
-
-  async function onGuardar() {
-    if (!usuario) return
-    if (password.length < LARGO_MINIMO_PASSWORD) {
-      return setError(`Minimo ${LARGO_MINIMO_PASSWORD} caracteres.`)
-    }
-    setGuardando(true)
-    const { error: err } = await cambiarPassword(usuario.id, password)
-    setGuardando(false)
-    if (err) setError(err)
-    else {
-      toast.success('Contrasena actualizada')
-      onCerrar()
-    }
-  }
-
-  return (
-    <Modal
-      abierto={usuario !== null}
-      titulo={`Cambiar contrasena — ${usuario?.username ?? ''}`}
-      onCerrar={onCerrar}
-      ancho="max-w-sm"
-      footer={
-        <>
-          <Button variant="outline" onClick={onCerrar} disabled={guardando}>Cancelar</Button>
-          <Button onClick={onGuardar} disabled={guardando}>{guardando ? 'Guardando…' : 'Cambiar'}</Button>
-        </>
-      }
-    >
-      <div className="space-y-4">
-        <Field label="Nueva contrasena" hint={`Minimo ${LARGO_MINIMO_PASSWORD} caracteres`}>
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus />
+        {/* La propia contrasena no se cambia desde aca: al cambiarla, Supabase
+            cierra la sesion de quien la cambia. Para eso esta el icono de la
+            llave de la barra, que vuelve a iniciar sesion solo. */}
+        <Field
+          label="Nueva contrasena"
+          hint={
+            esYo
+              ? 'Tu propia contrasena se cambia con el icono de la llave, arriba a la derecha.'
+              : `Dejala vacia para no cambiarla. Minimo ${LARGO_MINIMO_PASSWORD} caracteres.`
+          }
+        >
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+            disabled={esYo}
+          />
         </Field>
         {error && <ErrorBox mensaje={error} />}
       </div>

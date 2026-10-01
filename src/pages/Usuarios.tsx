@@ -8,7 +8,6 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Input } from '@/components/ui/field'
 import { ConfirmModal } from '@/components/ui/modal'
 import {
-  CambiarPasswordModal,
   EditarUsuarioModal,
   NuevoUsuarioModal,
   UsuarioDetalleModal,
@@ -49,7 +48,6 @@ export default function Usuarios() {
   const [modalNuevo, setModalNuevo] = useState(false)
   const [modalDetalle, setModalDetalle] = useState<Usuario | null>(null)
   const [modalEditar, setModalEditar] = useState<Usuario | null>(null)
-  const [modalPassword, setModalPassword] = useState<Usuario | null>(null)
   const [modalEliminar, setModalEliminar] = useState<Usuario | null>(null)
 
   const esYo = (u: Usuario | null) => u?.id === yo?.id
@@ -154,10 +152,6 @@ export default function Usuarios() {
           setModalEditar(modalDetalle)
           setModalDetalle(null)
         }}
-        onCambiarPassword={() => {
-          setModalPassword(modalDetalle)
-          setModalDetalle(null)
-        }}
         onEliminar={() => {
           setModalEliminar(modalDetalle)
           setModalDetalle(null)
@@ -185,11 +179,6 @@ export default function Usuarios() {
         }}
         editar={editar}
         cambiarRol={cambiarRol}
-      />
-
-      <CambiarPasswordModal
-        usuario={modalPassword}
-        onCerrar={() => setModalPassword(null)}
         cambiarPassword={cambiarPassword}
       />
 
