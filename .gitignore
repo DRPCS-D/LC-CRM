@@ -41,3 +41,6 @@ app-base.zip
 
 # Credenciales de las cuentas creadas al arrancar el proyecto (admin + pruebas)
 credenciales.local.json
+
+# Guia de uso para los vendedores (PDF y capturas marcadas): material local, no es codigo
+docs/guia-de-uso/
