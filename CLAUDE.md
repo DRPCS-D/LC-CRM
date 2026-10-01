@@ -203,7 +203,7 @@ porque el test pasaria igual pero por la razon equivocada:
 
 ### Tema (`src/lib/tema.ts`, sin contexto de React)
 
-Claro/oscuro/sistema vive en un modulo plano con sus propios suscriptores,
+Claro/oscuro (claro por defecto, sin modo "sistema") vive en un modulo plano con sus propios suscriptores,
 leido via `useSyncExternalStore` (`src/hooks/useTema.ts`), porque el
 interruptor aparece en layouts que nunca estan montados a la vez (`Login`,
 `AppLayout`) y todos necesitan ver el mismo valor sin un provider comun

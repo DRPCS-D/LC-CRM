@@ -30,10 +30,8 @@
     -->
     <script>
       try {
-        var tema = localStorage.getItem('%MARCA_CLAVE_TEMA%') || 'sistema'
-        var oscuro =
-          tema === 'oscuro' ||
-          (tema === 'sistema' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        var tema = localStorage.getItem('%MARCA_CLAVE_TEMA%')
+        var oscuro = tema === 'oscuro'
         if (oscuro) document.documentElement.classList.add('dark')
       } catch (e) {
         /* sin localStorage se usa el tema claro */
