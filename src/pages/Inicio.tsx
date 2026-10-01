@@ -42,7 +42,7 @@ export default function Inicio() {
         <p className="mt-1 text-sm text-muted-foreground">¿Qué querés hacer?</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
         {modulos.map(({ to, titulo, icono: Icono }) => (
           <Link
             key={to}
