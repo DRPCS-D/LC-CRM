@@ -317,8 +317,10 @@ function ClienteDetalleModal({
                 {propios.map((p) => (
                   <li key={p.id}>
                     <button type="button" onClick={() => setPedidoAbierto(p)} className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-accent/40">
+                      <span className="tabular hidden w-20 shrink-0 font-medium sm:block">{p.nro_orden}</span>
                       <span className="tabular shrink-0 text-xs text-muted-foreground">{formatFecha(p.created_at)}</span>
-                      <span className="min-w-0 flex-1 truncate font-medium">{p.cliente_nombre ?? cliente.razon_social}</span>
+                      <span className="min-w-0 flex-1 truncate font-medium sm:font-normal">{p.cliente_nombre ?? cliente.razon_social}</span>
+                      <span className="hidden w-28 shrink-0 truncate text-muted-foreground sm:block">{p.marca}</span>
                       <span className="tabular shrink-0 text-right">{formatGs(p.total_precio)}</span>
                     </button>
                   </li>
