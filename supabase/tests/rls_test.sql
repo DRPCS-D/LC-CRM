@@ -30,7 +30,7 @@
 -- ═══════════════════════════════════════════════════════════════════════════
 
 begin;
-select plan(71);
+select plan(76);
 
 create extension if not exists pgtap with schema extensions;
 
@@ -43,6 +43,7 @@ create extension if not exists pgtap with schema extensions;
 --   caro  — otro vendedor (para probar que beto no la ve)
 --   dani  — vendedor DESACTIVADO
 --   eva   — admin DESACTIVADA (el rol no alcanza: tiene que estar activa)
+--   rosa  — cobradora (solo informes)
 --
 -- `usuarios.id` referencia `auth.users`, asi que hay que sembrar las dos.
 -- Solo se insertan `id` y `email` en auth.users: es lo minimo que pide la
@@ -55,7 +56,8 @@ insert into auth.users (id, email) values
   ('33333333-3333-3333-3333-333333333333', 'caro@test.local'),
   ('44444444-4444-4444-4444-444444444444', 'dani@test.local'),
   ('55555555-5555-5555-5555-555555555555', 'eva@test.local'),
-  ('66666666-6666-6666-6666-666666666666', 'sofi@test.local');
+  ('66666666-6666-6666-6666-666666666666', 'sofi@test.local'),
+  ('77777777-7777-7777-7777-777777777777', 'rosa@test.local');
 
 insert into usuarios (id, username, nombre, email, rol, activo) values
   ('11111111-1111-1111-1111-111111111111', 'ana',  'Ana',  'ana@test.local',  'admin',      true),
@@ -63,7 +65,8 @@ insert into usuarios (id, username, nombre, email, rol, activo) values
   ('33333333-3333-3333-3333-333333333333', 'caro', 'Caro', 'caro@test.local', 'vendedor',   true),
   ('44444444-4444-4444-4444-444444444444', 'dani', 'Dani', 'dani@test.local', 'vendedor',   false),
   ('55555555-5555-5555-5555-555555555555', 'eva',  'Eva',  'eva@test.local',  'admin',      false),
-  ('66666666-6666-6666-6666-666666666666', 'sofi', 'Sofi', 'sofi@test.local', 'supervisor', true);
+  ('66666666-6666-6666-6666-666666666666', 'sofi', 'Sofi', 'sofi@test.local', 'supervisor', true),
+  ('77777777-7777-7777-7777-777777777777', 'rosa', 'Rosa', 'rosa@test.local', 'cobrador',   true);
 
 -- Dominio: dos clientes y un pedido de Caro ya cargado. Se siembra como
 -- superusuario y SIN sesion (el claim esta vacio), asi los triggers respetan
@@ -81,10 +84,10 @@ insert into pedidos (id, cliente_id, nro_orden, tipo, marca, total_pares, total_
 select set_config('request.jwt.claim.sub', '11111111-1111-1111-1111-111111111111', true);
 set local role authenticated;
 
-select is((select count(*)::int from usuarios), 6, 'El admin ve a todas las personas del sistema');
+select is((select count(*)::int from usuarios), 7, 'El admin ve a todas las personas del sistema');
 
 select set_config('request.jwt.claim.sub', '66666666-6666-6666-6666-666666666666', true);
-select is((select count(*)::int from usuarios), 6, 'El supervisor tambien ve a todas las personas');
+select is((select count(*)::int from usuarios), 7, 'El supervisor tambien ve a todas las personas');
 
 select set_config('request.jwt.claim.sub', '22222222-2222-2222-2222-222222222222', true);
 select is((select count(*)::int from usuarios), 1, 'Un vendedor ve una sola fila');
@@ -377,6 +380,24 @@ select is(
 
 select set_config('request.jwt.claim.sub', '44444444-4444-4444-4444-444444444444', true);
 select is(total_global_cliente('c1000000-0000-0000-0000-000000000001'), null::bigint, 'Un desactivado no ve ni el total');
+
+-- ═════════════════════════════════════════════════════════════
+-- COBRADOR (rosa): solo informes
+-- ═════════════════════════════════════════════════════════════
+select set_config('request.jwt.claim.sub', '77777777-7777-7777-7777-777777777777', true);
+
+select is((select count(*)::int from clientes), 2, 'Un cobrador ve los clientes (los necesita para elegir a quien visito)');
+select is((select count(*)::int from pedidos), 0, 'Un cobrador no ve pedidos');
+select throws_ok(
+  $$insert into pedidos (cliente_id, nro_orden, tipo, marca, total_pares, total_precio, usuario_id)
+    values ('c1000000-0000-0000-0000-000000000001', '0000999', 'STOCK', 'X', 1, 1, '77777777-7777-7777-7777-777777777777')$$,
+  '42501', null, 'Un cobrador no puede cargar pedidos'
+);
+select lives_ok(
+  $$select guardar_informe('c1000000-0000-0000-0000-000000000001', 'Visita de cobro', -25.3, -57.6, false, 'b1000000-0000-0000-0000-00000000000c')$$,
+  'Un cobrador guarda informes con guardar_informe()'
+);
+select is(total_global_cliente('c1000000-0000-0000-0000-000000000001'), null::bigint, 'Un cobrador no ve el total historico del cliente');
 
 reset role;
 select * from finish();

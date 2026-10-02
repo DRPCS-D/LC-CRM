@@ -68,6 +68,7 @@ const handler: ApiHandler = async (req, res) => {
 
   const actor = await exigeUsuario(req, res)
   if (!actor) return
+  if (actor.rol === 'cobrador') return error(res, 403, 'No tenés permiso para esta operación.')
 
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) return error(res, 500, 'Falta configurar OPENAI_API_KEY en el servidor.')

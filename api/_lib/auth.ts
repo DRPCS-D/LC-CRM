@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { error, type ApiRequest, type ApiResponse } from './http.js'
 
-export type Rol = 'admin' | 'supervisor' | 'vendedor'
+export type Rol = 'admin' | 'supervisor' | 'vendedor' | 'cobrador'
 
 export interface PerfilServidor {
   id: string

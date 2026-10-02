@@ -17,22 +17,25 @@
  *   · admin      — todo. Es el nivel maximo.
  *   · supervisor — ve todo, no edita ni borra (el "AdminL" de la app vieja).
  *   · vendedor   — carga y ve solo lo suyo.
+ *   · cobrador   — solo informes de visita, y solo los suyos.
  */
-export type Rol = 'admin' | 'supervisor' | 'vendedor'
+export type Rol = 'admin' | 'supervisor' | 'vendedor' | 'cobrador'
 
 export const ROL_LABEL: Record<Rol, string> = {
   admin: 'Administrador',
   supervisor: 'Supervisor',
   vendedor: 'Vendedor',
+  cobrador: 'Cobrador',
 }
 
 export const ROL_DESCRIPCION: Record<Rol, string> = {
   admin: 'Acceso completo: carga, edita y borra todo, y gestiona usuarios.',
   supervisor: 'Ve todo (pedidos, informes, reportes y usuarios), pero no edita ni borra.',
   vendedor: 'Carga pedidos e informes y ve solo los suyos.',
+  cobrador: 'Carga informes de visita y ve solo los suyos. No ve pedidos.',
 }
 
-export const ROLES: readonly Rol[] = ['vendedor', 'supervisor', 'admin']
+export const ROLES: readonly Rol[] = ['vendedor', 'cobrador', 'supervisor', 'admin']
 
 /** Perfil de una persona. Comparte el `id` con su cuenta de `auth.users`. */
 export interface Usuario {

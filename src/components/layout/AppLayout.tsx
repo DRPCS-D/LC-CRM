@@ -27,12 +27,12 @@ import { cn } from '@/lib/utils'
  * de las secciones se alcanza desde las tarjetas de Inicio.
  */
 const NAV = [
-  { to: '/', abajo: true, label: 'Inicio', end: true, veTodo: false, icono: House },
-  { to: '/pedidos', abajo: true, label: 'Pedidos', end: false, veTodo: false, icono: ClipboardList },
-  { to: '/informes', abajo: true, label: 'Informes', end: false, veTodo: false, icono: MapPinned },
-  { to: '/clientes', abajo: false, label: 'Clientes', end: false, veTodo: false, icono: Store },
-  { to: '/reportes', abajo: false, label: 'Reportes', end: false, veTodo: true, icono: BarChart3 },
-  { to: '/usuarios', abajo: false, label: 'Usuarios', end: false, veTodo: true, icono: Users },
+  { to: '/', abajo: true, label: 'Inicio', end: true, veTodo: false, sinCobrador: false, icono: House },
+  { to: '/pedidos', abajo: true, label: 'Pedidos', end: false, veTodo: false, sinCobrador: true, icono: ClipboardList },
+  { to: '/informes', abajo: true, label: 'Informes', end: false, veTodo: false, sinCobrador: false, icono: MapPinned },
+  { to: '/clientes', abajo: false, label: 'Clientes', end: false, veTodo: false, sinCobrador: true, icono: Store },
+  { to: '/reportes', abajo: false, label: 'Reportes', end: false, veTodo: true, sinCobrador: false, icono: BarChart3 },
+  { to: '/usuarios', abajo: false, label: 'Usuarios', end: false, veTodo: true, sinCobrador: false, icono: Users },
 ]
 
 const MENSAJE_PROBLEMA = {
@@ -47,11 +47,11 @@ const MENSAJE_PROBLEMA = {
 } as const
 
 export default function AppLayout() {
-  const { user, usuario, rol, veTodo, loading, problemaPerfil, signOut } = useAuth()
+  const { user, usuario, rol, veTodo, esCobrador, loading, problemaPerfil, signOut } = useAuth()
   const navigate = useNavigate()
   const [modalPassword, setModalPassword] = useState(false)
 
-  const links = NAV.filter((item) => !item.veTodo || veTodo)
+  const links = NAV.filter((item) => (!item.veTodo || veTodo) && !(esCobrador && item.sinCobrador))
 
   useEffect(() => {
     if (!loading && !user) navigate('/login', { replace: true })

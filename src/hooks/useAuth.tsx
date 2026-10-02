@@ -24,6 +24,8 @@ interface AuthState {
   esAdmin: boolean
   /** Admin o supervisor: ve los datos de todos (el vendedor, solo los suyos). */
   veTodo: boolean
+  /** Cobrador: solo usa Informes (no ve Pedidos ni Clientes). */
+  esCobrador: boolean
   loading: boolean
   /**
    * Hay sesion valida pero algo impide usar la app:
@@ -172,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       rol,
       esAdmin: rol === 'admin',
       veTodo: rol === 'admin' || rol === 'supervisor',
+      esCobrador: rol === 'cobrador',
       loading,
       problemaPerfil,
       signIn,

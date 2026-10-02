@@ -28,6 +28,7 @@ Tres niveles globales (`usuarios.rol`), aplicados por RLS en Postgres:
 | `admin` | Admin | Todo: edita y borra pedidos, informes y clientes; gestiona usuarios. |
 | `supervisor` | AdminL | Ve todo (pedidos, informes, reportes, usuarios). No edita ni borra. |
 | `vendedor` | User | Carga pedidos e informes y ve solo los suyos. De los clientes ve el total general de compras. |
+| `cobrador` | — | Solo carga informes de visita y ve solo los suyos. No ve pedidos ni la sección Clientes. |
 
 Un admin puede nombrar a otro admin, pero **no puede sacarse a si mismo**:
 ni bajarse de rol, ni desactivarse, ni borrar su cuenta.

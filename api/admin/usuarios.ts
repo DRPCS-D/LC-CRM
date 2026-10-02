@@ -24,7 +24,7 @@ import { conManejoDeErrores, error, exigeMetodo, leerBody, type ApiHandler } fro
 
 const LARGO_MINIMO_PASSWORD = 6
 const DOMINIO_INTERNO = 'lc-crm.local'
-const ROLES: readonly Rol[] = ['admin', 'supervisor', 'vendedor']
+const ROLES: readonly Rol[] = ['admin', 'supervisor', 'vendedor', 'cobrador']
 const USERNAME_VALIDO = /^[a-z0-9._-]{3,40}$/
 
 function emailInterno(username: string): string {

@@ -36,13 +36,19 @@ comandos resuelven siempre la misma version.
 ### Tres niveles, los tres globales
 
 `usuarios` cuelga de `auth.users` (comparten el `id`). `rol` vale `'admin'`,
-`'supervisor'` o `'vendedor'` (antes Admin, AdminL y User en el Sheet). No hay
+`'supervisor'`, `'vendedor'` o `'cobrador'` (antes Admin, AdminL y User en el Sheet;
+cobrador es nuevo). No hay
 tenants ni roles por seccion.
 
 - `admin` — todo: edita y borra pedidos, informes y clientes, y gestiona
   personas.
 - `supervisor` — ve todo, no escribe nada.
 - `vendedor` — carga pedidos e informes y ve solo los suyos.
+- `cobrador` — solo informes de visita, y solo los suyos. Lee `clientes` (los
+  necesita para elegir a quien visito) pero no ve ni carga pedidos, ni sube
+  fotos, ni ve `total_global_cliente()`; `private.es_cobrador()` y la migracion
+  `006_cobrador.sql` lo cierran, y la UI le oculta Pedidos y Clientes
+  (`RequiereNoCobrador`).
 
 Los helpers `security definer` viven en el esquema `private` (no `public`,
 para que PostgREST no los exponga como RPC): `es_admin()`, `ve_todo()` (admin

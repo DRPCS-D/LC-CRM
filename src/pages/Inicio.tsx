@@ -9,6 +9,8 @@ interface Modulo {
   icono: ComponentType<{ className?: string }>
   /** Solo admin y supervisor. */
   veTodo?: boolean
+  /** Oculto para el cobrador. */
+  sinCobrador?: boolean
 }
 
 /**
@@ -19,18 +21,18 @@ interface Modulo {
  * arriba de la version de escritorio.
  */
 const MODULOS: Modulo[] = [
-  { to: '/pedidos', titulo: 'Pedidos', icono: FileText },
+  { to: '/pedidos', titulo: 'Pedidos', icono: FileText, sinCobrador: true },
   { to: '/informes', titulo: 'Informes', icono: MapPin },
-  { to: '/clientes', titulo: 'Clientes', icono: User },
-  { to: '/clientes/mapa', titulo: 'Mapa de clientes', icono: Map },
+  { to: '/clientes', titulo: 'Clientes', icono: User, sinCobrador: true },
+  { to: '/clientes/mapa', titulo: 'Mapa de clientes', icono: Map, sinCobrador: true },
   { to: '/usuarios', titulo: 'Usuarios', icono: Users, veTodo: true },
   { to: '/reportes', titulo: 'Reportes', icono: BarChart3, veTodo: true },
 ]
 
 export default function Inicio() {
-  const { usuario, veTodo } = useAuth()
+  const { usuario, veTodo, esCobrador } = useAuth()
 
-  const modulos = MODULOS.filter((m) => !m.veTodo || veTodo)
+  const modulos = MODULOS.filter((m) => (!m.veTodo || veTodo) && !(esCobrador && m.sinCobrador))
   const primerNombre = usuario?.nombre?.split(' ')[0] ?? usuario?.username ?? ''
 
   return (
