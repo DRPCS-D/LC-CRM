@@ -101,8 +101,8 @@ function ListaClientes() {
           placeholder="Buscar por código, nombre, ciudad o zona…"
           className="w-full sm:max-w-sm"
         />
-        <MultiSelect label="Ciudad" opciones={opcionesDe(data, (c) => c.ciudad)} seleccion={ciudades} onCambiar={setCiudades} className="w-44" />
-        <MultiSelect label="Zona" opciones={opcionesDe(data, (c) => c.zona)} seleccion={zonas} onCambiar={setZonas} className="w-44" />
+        <MultiSelect enLinea label="Ciudad" opciones={opcionesDe(data, (c) => c.ciudad)} seleccion={ciudades} onCambiar={setCiudades} className="w-44" />
+        <MultiSelect enLinea label="Zona" opciones={opcionesDe(data, (c) => c.zona)} seleccion={zonas} onCambiar={setZonas} className="w-44" />
         {esAdmin && (
           <Button className="ml-auto" onClick={() => setEdicion('nuevo')}>
             <Plus /> Nuevo cliente

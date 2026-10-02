@@ -15,7 +15,10 @@ export function MultiSelect({
   seleccion,
   onCambiar,
   className,
+  enLinea,
 }: {
+  /** En pantallas anchas el rotulo va dentro del control ("Ciudad: Todos") y no arriba. */
+  enLinea?: boolean
   label: string
   opciones: string[]
   seleccion: string[]
@@ -65,7 +68,7 @@ export function MultiSelect({
 
   return (
     <div className={className}>
-      <p className="mb-1.5 text-xs font-medium text-muted-foreground">{label}</p>
+      <p className={cn('mb-1.5 text-xs font-medium text-muted-foreground', enLinea && 'sm:hidden')}>{label}</p>
       <button
         ref={botonRef}
         type="button"
@@ -73,6 +76,7 @@ export function MultiSelect({
         className="flex h-9.5 w-full items-center justify-between gap-2 rounded-md border border-input bg-card px-3 text-left text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className={cn('truncate', seleccion.length === 0 && 'text-muted-foreground')}>
+          {enLinea && <span className="hidden text-muted-foreground sm:inline">{label}: </span>}
           {seleccion.length === 0
             ? 'Todos'
             : seleccion.length === 1
