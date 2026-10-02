@@ -294,10 +294,10 @@ function ClienteDetalleModal({
             </Link>
           )}
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Kpi titulo="Pedidos" valor={propios.length} />
             <Kpi titulo="Total pares" valor={formatMiles(totalPares)} />
-            <Kpi titulo="Total monto" valor={formatGs(totalMonto)} />
+            <Kpi titulo="Total monto" valor={formatGs(totalMonto)} className="col-span-2 sm:col-span-1" />
           </div>
           {totalGlobal !== null && (
             <Kpi titulo="Total general (todos los vendedores)" valor={formatGs(totalGlobal)} />

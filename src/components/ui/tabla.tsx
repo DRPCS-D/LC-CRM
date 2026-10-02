@@ -75,7 +75,9 @@ export function Kpi({
   valor,
   detalle,
   tono = 'neutral',
+  className,
 }: {
+  className?: string
   titulo: string
   valor: ReactNode
   detalle?: ReactNode
@@ -84,12 +86,13 @@ export function Kpi({
   return (
     <div
       className={cn(
-        'rounded-lg border bg-card px-4 py-3 shadow-xs',
+        'rounded-lg border bg-card px-3 py-3 shadow-xs sm:px-4',
         tono === 'warning' ? 'border-warning/50 bg-warning/8' : 'border-border',
+        className,
       )}
     >
       <p className="text-xs text-muted-foreground">{titulo}</p>
-      <p className="tabular mt-0.5 truncate text-lg font-semibold text-foreground">{valor}</p>
+      <p className="tabular mt-0.5 break-words text-lg font-semibold text-foreground">{valor}</p>
       {detalle && <div className="mt-0.5 text-xs text-muted-foreground">{detalle}</div>}
     </div>
   )
