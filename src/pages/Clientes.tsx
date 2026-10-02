@@ -321,7 +321,7 @@ function ClienteDetalleModal({
                       <span className="tabular shrink-0 text-xs text-muted-foreground">{formatFecha(p.created_at)}</span>
                       <span className="min-w-0 flex-1 truncate font-medium sm:font-normal">{p.cliente_nombre ?? cliente.razon_social}</span>
                       <span className="hidden w-28 shrink-0 truncate text-muted-foreground sm:block">{p.marca}</span>
-                      <span className="tabular shrink-0 text-right">{formatGs(p.total_precio)}</span>
+                      <span className="tabular shrink-0 text-right sm:w-28">{formatGs(p.total_precio)}</span>
                     </button>
                   </li>
                 ))}
