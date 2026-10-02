@@ -287,7 +287,7 @@ function NuevoPedido() {
   return (
     <div className="grid gap-5 lg:grid-cols-2">
       <Card>
-        <CardHeader title="Foto del pedido" description="JPG, PNG, HEIC o PDF, hasta 20 MB." />
+        <CardHeader title="Foto del pedido" />
         <CardBody>
           <input
             ref={inputRef}
@@ -336,6 +336,7 @@ function NuevoPedido() {
                   <ImageUp className="size-7" />
                   <span className="font-medium text-foreground">Tocá para elegir un archivo</span>
                   <span className="text-xs">o arrastralo acá</span>
+                  <span className="mt-1 text-[11px] text-muted-foreground/70">JPG, PNG, HEIC o PDF, hasta 20 MB.</span>
                 </>
               )}
             </button>
