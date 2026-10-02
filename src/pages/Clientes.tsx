@@ -201,7 +201,7 @@ function ClienteDetalleModal({
   onEditar?: () => void
   onEliminar?: () => void
 }) {
-  const { usuario, veTodo } = useAuth()
+  const { usuario, veTodo, esCobrador } = useAuth()
   const { data: pedidos } = usePedidos()
   const [pedidoAbierto, setPedidoAbierto] = useState<Pedido | null>(null)
   const [totalGlobal, setTotalGlobal] = useState<number | null>(null)
@@ -219,13 +219,13 @@ function ClienteDetalleModal({
   // El vendedor ve ademas cuanto compro el cliente en total (todos los vendedores).
   useEffect(() => {
     setTotalGlobal(null)
-    if (!cliente || veTodo) return
+    if (!cliente || veTodo || esCobrador) return
     let vigente = true
     supabase.rpc('total_global_cliente', { p_cliente_id: cliente.id }).then(({ data }) => {
       if (vigente && typeof data === 'number') setTotalGlobal(data)
     })
     return () => { vigente = false }
-  }, [cliente, veTodo])
+  }, [cliente, veTodo, esCobrador])
 
   useEffect(() => {
     if (!cliente || pedidoAbierto) return
@@ -294,39 +294,44 @@ function ClienteDetalleModal({
             </Link>
           )}
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <Kpi titulo="Pedidos" valor={propios.length} />
-            <Kpi titulo="Total pares" valor={formatMiles(totalPares)} />
-            <Kpi titulo="Total monto" valor={formatGs(totalMonto)} className="col-span-2 sm:col-span-1" />
-          </div>
-          {totalGlobal !== null && (
-            <Kpi titulo="Total general (todos los vendedores)" valor={formatGs(totalGlobal)} />
-          )}
-          {!veTodo && (
-            <p className="-mt-2 text-xs text-muted-foreground">
-              Pedidos, pares y monto son solo los que cargaste vos{usuario ? ` (${usuario.username})` : ''}.
-            </p>
-          )}
-
-          <div>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Pedidos</h3>
-            {propios.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin pedidos.</p>
-            ) : (
-              <ul className="max-h-64 divide-y divide-border overflow-y-auto rounded-md border border-border">
-                {propios.map((p) => (
-                  <li key={p.id}>
-                    <button type="button" onClick={() => setPedidoAbierto(p)} className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-accent/40">
-                      <span className="tabular hidden w-20 shrink-0 font-medium sm:block">{p.nro_orden}</span>
-                      <span className="tabular shrink-0 text-xs text-muted-foreground">{formatFecha(p.created_at)}</span>
-                      <span className="min-w-0 flex-1 truncate font-medium sm:font-normal sm:text-muted-foreground">{p.marca}</span>
-                      <span className="tabular shrink-0 text-right sm:w-28">{formatGs(p.total_precio)}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+          {/* El cobrador no ve pedidos: sin totales ni lista. */}
+          {!esCobrador && (
+            <>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <Kpi titulo="Pedidos" valor={propios.length} />
+              <Kpi titulo="Total pares" valor={formatMiles(totalPares)} />
+              <Kpi titulo="Total monto" valor={formatGs(totalMonto)} className="col-span-2 sm:col-span-1" />
+            </div>
+            {totalGlobal !== null && (
+              <Kpi titulo="Total general (todos los vendedores)" valor={formatGs(totalGlobal)} />
             )}
-          </div>
+            {!veTodo && (
+              <p className="-mt-2 text-xs text-muted-foreground">
+                Pedidos, pares y monto son solo los que cargaste vos{usuario ? ` (${usuario.username})` : ''}.
+              </p>
+            )}
+
+            <div>
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Pedidos</h3>
+              {propios.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Sin pedidos.</p>
+              ) : (
+                <ul className="max-h-64 divide-y divide-border overflow-y-auto rounded-md border border-border">
+                  {propios.map((p) => (
+                    <li key={p.id}>
+                      <button type="button" onClick={() => setPedidoAbierto(p)} className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-accent/40">
+                        <span className="tabular hidden w-20 shrink-0 font-medium sm:block">{p.nro_orden}</span>
+                        <span className="tabular shrink-0 text-xs text-muted-foreground">{formatFecha(p.created_at)}</span>
+                        <span className="min-w-0 flex-1 truncate font-medium sm:font-normal sm:text-muted-foreground">{p.marca}</span>
+                        <span className="tabular shrink-0 text-right sm:w-28">{formatGs(p.total_precio)}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            </>
+          )}
         </div>
       </Modal>
 

@@ -33,8 +33,8 @@ export default function App() {
         <Route index element={<Inicio />} />
         <Route element={<RequiereNoCobrador />}>
           <Route path="pedidos/*" element={<Pedidos />} />
-          <Route path="clientes/*" element={<Clientes />} />
         </Route>
+        <Route path="clientes/*" element={<Clientes />} />
         <Route path="informes/*" element={<Informes />} />
         <Route element={<RequiereVeTodo />}>
           <Route

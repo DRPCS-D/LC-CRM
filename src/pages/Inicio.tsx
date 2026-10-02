@@ -23,8 +23,8 @@ interface Modulo {
 const MODULOS: Modulo[] = [
   { to: '/pedidos', titulo: 'Pedidos', icono: FileText, sinCobrador: true },
   { to: '/informes', titulo: 'Informes', icono: MapPin },
-  { to: '/clientes', titulo: 'Clientes', icono: User, sinCobrador: true },
-  { to: '/clientes/mapa', titulo: 'Mapa de clientes', icono: Map, sinCobrador: true },
+  { to: '/clientes', titulo: 'Clientes', icono: User },
+  { to: '/clientes/mapa', titulo: 'Mapa de clientes', icono: Map },
   { to: '/usuarios', titulo: 'Usuarios', icono: Users, veTodo: true },
   { to: '/reportes', titulo: 'Reportes', icono: BarChart3, veTodo: true },
 ]

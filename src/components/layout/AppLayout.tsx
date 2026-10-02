@@ -30,7 +30,7 @@ const NAV = [
   { to: '/', abajo: true, label: 'Inicio', end: true, veTodo: false, sinCobrador: false, icono: House },
   { to: '/pedidos', abajo: true, label: 'Pedidos', end: false, veTodo: false, sinCobrador: true, icono: ClipboardList },
   { to: '/informes', abajo: true, label: 'Informes', end: false, veTodo: false, sinCobrador: false, icono: MapPinned },
-  { to: '/clientes', abajo: false, label: 'Clientes', end: false, veTodo: false, sinCobrador: true, icono: Store },
+  { to: '/clientes', abajo: false, label: 'Clientes', end: false, veTodo: false, sinCobrador: false, icono: Store },
   { to: '/reportes', abajo: false, label: 'Reportes', end: false, veTodo: true, sinCobrador: false, icono: BarChart3 },
   { to: '/usuarios', abajo: false, label: 'Usuarios', end: false, veTodo: true, sinCobrador: false, icono: Users },
 ]
