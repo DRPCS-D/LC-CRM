@@ -319,7 +319,7 @@ function ClienteDetalleModal({
                     <button type="button" onClick={() => setPedidoAbierto(p)} className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-accent/40">
                       <span className="tabular hidden w-20 shrink-0 font-medium sm:block">{p.nro_orden}</span>
                       <span className="tabular shrink-0 text-xs text-muted-foreground">{formatFecha(p.created_at)}</span>
-                      <span className="hidden min-w-0 flex-1 truncate text-muted-foreground sm:block">{p.marca}</span>
+                      <span className="min-w-0 flex-1 truncate font-medium sm:font-normal sm:text-muted-foreground">{p.marca}</span>
                       <span className="tabular shrink-0 text-right sm:w-28">{formatGs(p.total_precio)}</span>
                     </button>
                   </li>
