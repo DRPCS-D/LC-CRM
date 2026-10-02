@@ -322,7 +322,7 @@ function NuevoPedido() {
               onDrop={onDrop}
               disabled={procesando}
               className={cn(
-                'flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-input text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:bg-accent/40',
+                'flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-primary/25 bg-accent/40 text-sm text-muted-foreground transition-colors hover:border-primary/60',
                 arrastrando && 'border-primary bg-accent/60',
               )}
             >
