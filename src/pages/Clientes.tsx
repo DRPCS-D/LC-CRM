@@ -168,9 +168,9 @@ function ListaClientes() {
       ) : filtrados.length === 0 ? (
         <Vacio icono={Store} titulo={data.length === 0 ? 'Todavía no hay clientes' : 'Sin resultados'} />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card xl:overflow-clip">
           <table className="w-full text-sm">
-            <thead>
+            <thead className="bg-card xl:sticky xl:top-14 xl:z-10 xl:shadow-[0_1px_0_0_var(--color-border)]">
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
                 <th className="px-3 py-2.5 font-medium">Código</th>
                 <th className="px-3 py-2.5 font-medium">Razón social</th>

@@ -121,9 +121,9 @@ export default function Usuarios() {
       ) : filtrados.length === 0 ? (
         <Vacio icono={UserRound} titulo="Sin resultados" descripcion="Probá con otra búsqueda." />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card xl:overflow-clip">
           <table className="w-full text-sm">
-            <thead>
+            <thead className="bg-card xl:sticky xl:top-14 xl:z-10 xl:shadow-[0_1px_0_0_var(--color-border)]">
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
                 <th className="px-4 py-2.5 font-medium">Usuario</th>
                 <th className="hidden px-4 py-2.5 font-medium sm:table-cell">Nombre</th>

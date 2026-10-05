@@ -617,10 +617,10 @@ function ListaPedidos() {
       ) : filtrados.length === 0 ? (
         <Vacio icono={ClipboardList} titulo={data.length === 0 ? 'Todavía no hay pedidos' : 'Sin resultados'} descripcion={data.length === 0 ? undefined : 'Proba con otros filtros.'} />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          <div className="overflow-x-auto">
+        <div className="overflow-hidden rounded-lg border border-border bg-card xl:overflow-clip">
+          <div className="overflow-x-auto xl:overflow-visible">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="bg-card xl:sticky xl:top-14 xl:z-10 xl:shadow-[0_1px_0_0_var(--color-border)]">
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <Th campo="nro" {...th}>N° Orden</Th>
                   <Th campo="fecha" {...th} className="hidden sm:table-cell">Fecha carga</Th>
