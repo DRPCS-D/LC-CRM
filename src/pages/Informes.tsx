@@ -282,20 +282,42 @@ function BotonFiltros({ f, abierto, onAlternar }: { f: FiltrosInforme; abierto: 
 }
 
 /** Atajos de fechas del mapa. Pisan Desde/Hasta; el resto de los filtros no se toca. */
-function BotonesRango({ onCambiar }: { onCambiar: (p: Partial<FiltrosInforme>) => void }) {
-  function rango(dias: number | 'mes' | 'todo') {
-    if (dias === 'todo') return onCambiar({ desde: '', hasta: '' })
+function BotonesRango({ f, onCambiar }: { f: FiltrosInforme; onCambiar: (p: Partial<FiltrosInforme>) => void }) {
+  type Clave = 'todo' | 'hoy' | 'semana' | 'mes'
+  // Cada atajo es solo un par desde/hasta. El activo se deduce de los filtros actuales, asi
+  // tambien se apaga si las fechas se cambian a mano en el panel de Filtros.
+  const rangos = (): Record<Clave, { desde: string; hasta: string }> => {
     const hoy = hoyLocal()
-    if (dias === 'mes') return onCambiar({ desde: hoy.slice(0, 8) + '01', hasta: '' })
-    const d = new Date()
-    d.setDate(d.getDate() - dias)
-    onCambiar({ desde: diaLocal(d), hasta: '' })
+    const hace7 = new Date()
+    hace7.setDate(hace7.getDate() - 7)
+    return {
+      todo: { desde: '', hasta: '' },
+      hoy: { desde: hoy, hasta: '' },
+      semana: { desde: diaLocal(hace7), hasta: '' },
+      mes: { desde: hoy.slice(0, 8) + '01', hasta: '' },
+    }
   }
+  const [elegido, setElegido] = useState<Clave | null>(null)
+  const r = rangos()
+  const coincide = (k: Clave) => f.desde === r[k].desde && f.hasta === r[k].hasta
+  // Si dos atajos dan lo mismo (ej. el dia 1, "Hoy" y "Mes"), gana el ultimo que se toco.
+  const activo = (['todo', 'hoy', 'semana', 'mes'] as const).find((k) => (elegido ? k === elegido && coincide(k) : coincide(k))) ?? (['todo', 'hoy', 'semana', 'mes'] as const).find(coincide)
 
   return (
     <div className="flex flex-wrap gap-2">
-      {([['Todo', 'todo'], ['Hoy', 0], ['Semana', 7], ['Mes', 'mes']] as const).map(([label, v]) => (
-        <Button key={label} variant="outline" size="sm" onClick={() => rango(v)}>{label}</Button>
+      {([['Todo', 'todo'], ['Hoy', 'hoy'], ['Semana', 'semana'], ['Mes', 'mes']] as const).map(([label, k]) => (
+        <Button
+          key={k}
+          variant={activo === k ? 'primary' : 'outline'}
+          size="sm"
+          aria-pressed={activo === k}
+          onClick={() => {
+            setElegido(k)
+            onCambiar(r[k])
+          }}
+        >
+          {label}
+        </Button>
       ))}
     </div>
   )
@@ -652,7 +674,7 @@ function MapaInformes() {
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <BotonesRango onCambiar={(p) => setF((s) => ({ ...s, ...p }))} />
+        <BotonesRango f={f} onCambiar={(p) => setF((s) => ({ ...s, ...p }))} />
         <div className="ml-auto">
           <BotonFiltros f={f} abierto={panel} onAlternar={() => setPanel((a) => !a)} />
         </div>
