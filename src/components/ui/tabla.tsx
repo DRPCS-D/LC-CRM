@@ -18,11 +18,15 @@ const DescripcionCtx = createContext<HTMLElement | null>(null)
  */
 /**
  * Alto de una vista cuya tabla tiene scroll propio: la pantalla menos la barra
- * de arriba (3.5625rem) y el relleno de <main> en AppLayout (celular: pt-5 +
- * pb-24 = 7.25rem; md: pt-8 + pb-10 = 4.5rem). Si se toca el relleno de
- * <main>, hay que tocar esto tambien.
+ * de arriba (3.5625rem), el relleno de arriba de <main> (celular pt-5, md pt-8),
+ * y, abajo, lo que ocupa la barra inferior del celular (3.4375rem + zona segura)
+ * mas un hueco igual al de los costados (1rem celular, 1.5rem md). El relleno de
+ * abajo de <main> (pb-24 / md:pb-10) es mayor que ese hueco, asi que la vista
+ * se corre hacia abajo con un margen negativo (-mb-7 / md:-mb-4) para que la
+ * pagina no llegue a desplazarse. Si se toca el relleno de <main> o la barra
+ * inferior, hay que tocar estos numeros tambien.
  */
-export const ALTO_VISTA = 'h-[calc(100dvh-3.5625rem-7.25rem)] md:h-[calc(100dvh-3.5625rem-4.5rem)]'
+export const ALTO_VISTA = 'h-[calc(100dvh-9.25rem-env(safe-area-inset-bottom))] -mb-7 md:h-[calc(100dvh-7.0625rem)] md:-mb-4'
 
 export function SeccionConTabs({
   titulo,

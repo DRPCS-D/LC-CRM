@@ -248,6 +248,11 @@ de columna contra ellos) para cuando el esquema crezca.
   y se vacian al cambiar de sesion: si se agrega una, crearla con
   `crearRecurso()` para que tambien se vacie. Despues de una escritura, llamar a
   su `refetch()`.
+- Las tablas bajan la lista ENTERA y la dibujan de a 50 (`useCargaProgresiva`);
+  eso no ahorra descarga. Cuando pedidos/informes pasen de ~10.000 filas hay que
+  paginar y filtrar desde la base (`range`, solo las columnas visibles, sync
+  incremental, reportes por RPC): ver la nota de escalabilidad en la memoria del
+  proyecto.
 - `Mapa`, `Reportes` y la exportacion a PDF se cargan con `lazy`/`import()`
   porque pesan; no importarlos de forma estatica.
 - Los modulos se enganchan en tres lugares: la ruta (`src/App.tsx`), el link
