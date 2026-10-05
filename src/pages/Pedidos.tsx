@@ -51,10 +51,8 @@ import { cn } from '@/lib/utils'
 export default function Pedidos() {
   return (
     <div>
-      <div className="mb-4">
-        <h1 className="text-lg font-semibold text-foreground">Pedidos</h1>
-      </div>
       <SeccionConTabs
+        titulo="Pedidos"
         tabs={[
           { to: '/pedidos', label: 'Nuevo', end: true, icono: FilePlus2 },
           { to: '/pedidos/lista', label: 'Pedidos', icono: ClipboardList },

@@ -8,23 +8,37 @@ import type { Orden } from '@/lib/orden'
 import { Input } from './field'
 
 const BarraTabsCtx = createContext<HTMLElement | null>(null)
+const DescripcionCtx = createContext<HTMLElement | null>(null)
 
 /**
  * Pestanas de la seccion con un hueco a la derecha, en la misma linea. Lo que
  * la pestana activa pase por <EnBarraDeTabs> (el buscador, "Nuevo") aparece ahi.
  * En el celular el hueco baja a su propia linea.
  */
-export function SeccionConTabs({ tabs, children }: { tabs: Tab[]; children: ReactNode }) {
+export function SeccionConTabs({ titulo, tabs, children }: { titulo: string; tabs: Tab[]; children: ReactNode }) {
   const [hueco, setHueco] = useState<HTMLElement | null>(null)
+  const [descripcion, setDescripcion] = useState<HTMLElement | null>(null)
   return (
     <BarraTabsCtx.Provider value={hueco}>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <SubTabs tabs={tabs} className="mb-0" />
-        <div ref={setHueco} className="flex w-full items-center gap-2 sm:w-auto" />
-      </div>
-      {children}
+      <DescripcionCtx.Provider value={descripcion}>
+        <div className="mb-4">
+          <h1 className="text-lg font-semibold text-foreground">{titulo}</h1>
+          <p ref={setDescripcion} className="empty:hidden text-sm text-muted-foreground" />
+        </div>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <SubTabs tabs={tabs} className="mb-0" />
+          <div ref={setHueco} className="flex w-full items-center gap-2 sm:w-auto" />
+        </div>
+        {children}
+      </DescripcionCtx.Provider>
     </BarraTabsCtx.Provider>
   )
+}
+
+/** Dibuja su contenido como descripcion bajo el titulo de <SeccionConTabs>. */
+export function EnDescripcion({ children }: { children: ReactNode }) {
+  const lugar = useContext(DescripcionCtx)
+  return lugar ? createPortal(children, lugar) : null
 }
 
 /** Dibuja su contenido en el hueco de <SeccionConTabs>. */

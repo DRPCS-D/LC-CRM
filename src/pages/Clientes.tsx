@@ -32,10 +32,8 @@ const Mapa = lazy(() => import('@/components/Mapa'))
 export default function Clientes() {
   return (
     <div>
-      <div className="mb-4">
-        <h1 className="text-lg font-semibold text-foreground">Clientes</h1>
-      </div>
       <SeccionConTabs
+        titulo="Clientes"
         tabs={[
           { to: '/clientes', label: 'Clientes', end: true },
           { to: '/clientes/mapa', label: 'Mapa' },

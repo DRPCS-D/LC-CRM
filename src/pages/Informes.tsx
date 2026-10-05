@@ -24,7 +24,7 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Field, Input, Textarea } from '@/components/ui/field'
 import { ConfirmModal, Modal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { AccionBuscador, Buscador, EnBarraDeTabs, Kpi, Paginacion, SeccionConTabs, TAMANO_PAGINA, Th } from '@/components/ui/tabla'
+import { AccionBuscador, Buscador, EnBarraDeTabs, EnDescripcion, Paginacion, SeccionConTabs, TAMANO_PAGINA, Th } from '@/components/ui/tabla'
 import { Avatar } from '@/components/ui/avatar'
 import { useAuth } from '@/hooks/useAuth'
 import { useEstadoSesion } from '@/hooks/useEstadoSesion'
@@ -43,10 +43,8 @@ const Mapa = lazy(() => import('@/components/Mapa'))
 export default function Informes() {
   return (
     <div>
-      <div className="mb-4">
-        <h1 className="text-lg font-semibold text-foreground">Informes de visita</h1>
-      </div>
       <SeccionConTabs
+        titulo="Informes de visita"
         tabs={[
           { to: '/informes', label: 'Nuevo', end: true, icono: FilePlus2 },
           { to: '/informes/lista', label: 'Informes', icono: FileText },
@@ -456,7 +454,13 @@ function ListaInformes() {
         />
       )}
 
-      <div className="mb-4 max-w-xs"><Kpi titulo="Visitas (filtradas)" valor={filtrados.length} /></div>
+      {!loading && (
+        <EnDescripcion>
+        {filtrados.length === data.length
+          ? `${filtrados.length.toLocaleString('es-PY')} visitas registradas.`
+          : `${filtrados.length.toLocaleString('es-PY')} de ${data.length.toLocaleString('es-PY')} visitas con los filtros aplicados.`}
+        </EnDescripcion>
+      )}
 
       {loading ? (
         <Cargando />
