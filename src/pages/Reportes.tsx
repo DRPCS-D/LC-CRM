@@ -93,7 +93,7 @@ export default function Reportes() {
             <CardBody><GraficoMensual serie={serie} /></CardBody>
           </Card>
 
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-2">
             {SECCIONES.map(({ dim, titulo }) => (
               <Card key={dim}>
                 <CardHeader title={`Top ${TOP} · ${titulo}`} />
