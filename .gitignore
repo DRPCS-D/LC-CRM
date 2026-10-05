@@ -44,3 +44,6 @@ credenciales.local.json
 
 # Guia de uso para los vendedores (PDF y capturas marcadas): material local, no es codigo
 docs/guia-de-uso/
+
+# Datos reales del Sheet (clientes, pedidos, usuarios): nunca al repo publico
+migracion/
