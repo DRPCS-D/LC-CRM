@@ -31,7 +31,7 @@ import { useEstadoSesion } from '@/hooks/useEstadoSesion'
 import { clientes as recursoClientes, informes as recursoInformes, mensajeDeError, useClientes, useInformes } from '@/hooks/useDatos'
 import { autorDe, type Cliente, type Informe } from '@/lib/database.types'
 import { descargarCSV } from '@/lib/exportar'
-import { diaLocal, formatFechaHora, hoyLocal, marcaDeTiempo, normalizar } from '@/lib/format'
+import { diaLocal, formatFechaHora, haceDias, hoyLocal, marcaDeTiempo, normalizar } from '@/lib/format'
 import { escaparHtml } from '@/lib/html'
 import { opcionesDe, ordenar, type Orden } from '@/lib/orden'
 import { supabase } from '@/lib/supabase'
@@ -79,12 +79,20 @@ interface Ubicacion {
 type EstadoUbicacion =
   | { tipo: 'buscando' }
   | { tipo: 'lista'; ubicacion: Ubicacion }
-  | { tipo: 'error'; mensaje: string }
+  | { tipo: 'error'; mensaje: string; denegado: boolean }
 
 const MENSAJE_GEO: Record<number, string> = {
-  1: 'Permiso de ubicación denegado. Habilitalo en los ajustes del navegador y tocá Reintentar.',
+  1: 'Permiso de ubicación denegado.',
   2: 'No se pudo determinar la ubicación. Salí a un lugar abierto y tocá Reintentar.',
   3: 'Se agotó el tiempo buscando la ubicación. Tocá Reintentar.',
+}
+
+class ErrorUbicacion extends Error {
+  denegado: boolean
+  constructor(mensaje: string, denegado: boolean) {
+    super(mensaje)
+    this.denegado = denegado
+  }
 }
 
 function pedirPosicion(alta: boolean): Promise<GeolocationPosition> {
@@ -114,13 +122,29 @@ async function obtenerUbicacion(): Promise<Ubicacion> {
     return aUbicacion(await pedirPosicion(true), 'GPS')
   } catch (e) {
     const codigo = (e as GeolocationPositionError).code
-    if (codigo === 1) throw new Error(MENSAJE_GEO[1])
+    if (codigo === 1) throw new ErrorUbicacion(MENSAJE_GEO[1], true)
     try {
       return aUbicacion(await pedirPosicion(false), 'red')
     } catch (e2) {
-      throw new Error(MENSAJE_GEO[(e2 as GeolocationPositionError).code] ?? MENSAJE_GEO[2])
+      const c2 = (e2 as GeolocationPositionError).code
+      throw new ErrorUbicacion(MENSAJE_GEO[c2] ?? MENSAJE_GEO[2], c2 === 1)
     }
   }
+}
+
+/** Pasos para habilitar la ubicacion segun el dispositivo; se ve solo cuando el permiso esta denegado. */
+function AyudaPermisoUbicacion() {
+  return (
+    <details className="mt-1.5 text-xs text-muted-foreground">
+      <summary className="cursor-pointer font-medium text-foreground">¿Cómo habilitarla?</summary>
+      <ul className="mt-1.5 list-disc space-y-1 pl-4">
+        <li><strong>iPhone / iPad:</strong> Ajustes › Privacidad y seguridad › Localización › Safari (o el sitio) › «Al usar la app».</li>
+        <li><strong>Android:</strong> tocá el candado junto a la dirección › Permisos › Ubicación › Permitir.</li>
+        <li><strong>Computadora:</strong> clic en el candado de la barra de direcciones › Ubicación › Permitir.</li>
+      </ul>
+      <p className="mt-1.5">Después tocá «Reintentar» (o volvé a esta pantalla).</p>
+    </details>
+  )
 }
 
 function NuevoInforme() {
@@ -140,7 +164,9 @@ function NuevoInforme() {
       const u = await obtenerUbicacion()
       if (mio === intento.current) setUbicacion({ tipo: 'lista', ubicacion: u })
     } catch (e) {
-      if (mio === intento.current) setUbicacion({ tipo: 'error', mensaje: e instanceof Error ? e.message : MENSAJE_GEO[2] })
+      if (mio === intento.current) {
+        setUbicacion({ tipo: 'error', mensaje: e instanceof Error ? e.message : MENSAJE_GEO[2], denegado: e instanceof ErrorUbicacion && e.denegado })
+      }
     }
   }
 
@@ -149,6 +175,24 @@ function NuevoInforme() {
     buscarUbicacion()
     return () => { intento.current++ }
   }, [])
+
+  // Si el permiso estaba denegado y la persona lo habilita en los ajustes, se reintenta solo.
+  const denegado = ubicacion.tipo === 'error' && ubicacion.denegado
+  useEffect(() => {
+    if (!denegado || !navigator.permissions?.query) return
+    let estado: PermissionStatus | null = null
+    const alCambiar = () => {
+      if (estado?.state !== 'denied') buscarUbicacion()
+    }
+    navigator.permissions.query({ name: 'geolocation' }).then(
+      (s) => {
+        estado = s
+        s.addEventListener('change', alCambiar)
+      },
+      () => {},
+    )
+    return () => estado?.removeEventListener('change', alCambiar)
+  }, [denegado])
 
   async function guardar() {
     if (!cliente || ubicacion.tipo !== 'lista') return
@@ -207,6 +251,7 @@ function NuevoInforme() {
                 {ubicacion.tipo === 'buscando' && <p className="text-muted-foreground">Buscando ubicación…</p>}
                 {ubicacion.tipo === 'lista' && <CircleCheck className="size-5 text-success" aria-label="Ubicación obtenida" />}
                 {ubicacion.tipo === 'error' && <p className="text-destructive">{ubicacion.mensaje}</p>}
+                {denegado && <AyudaPermisoUbicacion />}
               </div>
             </div>
             <Button variant="outline" size="sm" onClick={buscarUbicacion} disabled={ubicacion.tipo === 'buscando'}>
@@ -286,12 +331,10 @@ function BotonesRango({ f, onCambiar }: { f: FiltrosInforme; onCambiar: (p: Part
   // tambien se apaga si las fechas se cambian a mano en el panel de Filtros.
   const rangos = (): Record<Clave, { desde: string; hasta: string }> => {
     const hoy = hoyLocal()
-    const hace7 = new Date()
-    hace7.setDate(hace7.getDate() - 7)
     return {
       todo: { desde: '', hasta: '' },
       hoy: { desde: hoy, hasta: '' },
-      semana: { desde: diaLocal(hace7), hasta: '' },
+      semana: { desde: diaLocal(haceDias(7)), hasta: '' },
       mes: { desde: hoy.slice(0, 8) + '01', hasta: '' },
     }
   }
@@ -432,7 +475,7 @@ function ListaInformes() {
         <Buscador
           valor={e.busqueda}
           onCambiar={(busqueda) => cambiar({ busqueda })}
-          placeholder="Buscar cliente, comentario, usuario…"
+          placeholder="Cliente o comentario…"
           className="w-full sm:w-80"
           acciones={<AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((a) => !a)} insignia={contarFiltros(e)} activo={panel} />}
         />
@@ -471,10 +514,10 @@ function ListaInformes() {
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <Th campo="fecha" {...th}>Fecha</Th>
                   <Th campo="cliente" {...th}>Cliente</Th>
-                  <Th campo="ciudad" {...th} className="hidden lg:table-cell">Ciudad</Th>
-                  <Th campo="zona" {...th} className="hidden lg:table-cell">Zona</Th>
-                  <Th className="hidden md:table-cell">Comentario</Th>
-                  <Th campo="usuario" {...th} className="hidden sm:table-cell">Usuario</Th>
+                  <Th campo="ciudad" {...th}>Ciudad</Th>
+                  <Th campo="zona" {...th}>Zona</Th>
+                  <Th>Comentario</Th>
+                  <Th campo="usuario" {...th}>Usuario</Th>
                   <Th>Ubicación</Th>
                 </tr>
               </thead>
@@ -483,12 +526,12 @@ function ListaInformes() {
                   <tr key={i.id} onClick={() => setAbierto(i)} className="cursor-pointer border-b border-border last:border-0 hover:bg-accent/40">
                     <td className="tabular whitespace-nowrap px-3 py-2.5 text-muted-foreground">{formatFechaHora(i.created_at)}</td>
                     <td className="max-w-[14rem] truncate whitespace-nowrap px-3 py-2.5 font-medium" title={i.cliente_nombre ?? undefined}>{i.cliente_nombre}</td>
-                    <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground lg:table-cell" title={i.ciudad ?? undefined}>{i.ciudad}</td>
-                    <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground lg:table-cell" title={i.zona ?? undefined}>{i.zona}</td>
-                    <td className="hidden max-w-xs truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground md:table-cell" title={i.comentario ?? undefined}>
+                    <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={i.ciudad ?? undefined}>{i.ciudad}</td>
+                    <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={i.zona ?? undefined}>{i.zona}</td>
+                    <td className="max-w-xs truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={i.comentario ?? undefined}>
                       {i.comentario}
                     </td>
-                    <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground sm:table-cell">{autorDe(i)}</td>
+                    <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground">{autorDe(i)}</td>
                     <td className="whitespace-nowrap px-3 py-2.5" onClick={(ev) => ev.stopPropagation()}>
                       <Link to={`/informes/mapa?informe=${i.id}`} className="text-primary hover:underline">Ver en mapa</Link>
                     </td>
@@ -651,7 +694,9 @@ function InformeDetalleModal({
 
 function MapaInformes() {
   const { data, loading, error } = useInformes()
-  const [f, setF] = useState<FiltrosInforme>(FILTROS_VACIOS)
+  // Arranca en "Semana" (todo junto son mil y pico de puntos agrupados que no dicen
+  // nada) y recuerda lo ultimo que se eligio mientras dure la sesion.
+  const [f, setF] = useEstadoSesion<FiltrosInforme>('informes.mapa', { ...FILTROS_VACIOS, desde: diaLocal(haceDias(7)) })
   const [panel, setPanel] = useState(false)
   const [params] = useSearchParams()
   const navigate = useNavigate()
@@ -660,7 +705,7 @@ function MapaInformes() {
   // Llegar a un informe puntual: que ningun filtro lo oculte
   useEffect(() => {
     if (enfocar) setF(FILTROS_VACIOS)
-  }, [enfocar])
+  }, [enfocar, setF])
 
   const filtrados = useMemo(() => filtrarInformes(data, f), [data, f])
 

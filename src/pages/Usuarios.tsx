@@ -8,7 +8,7 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Card, CardBody } from '@/components/ui/card'
 import { ConfirmModal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { ALTO_VISTA, AccionBuscador, Buscador, ContadorLista } from '@/components/ui/tabla'
+import { ALTO_VISTA, AccionBuscador, Buscador, ContadorLista, Th } from '@/components/ui/tabla'
 import {
   EditarUsuarioModal,
   NuevoUsuarioModal,
@@ -17,8 +17,21 @@ import {
 import { useAuth } from '@/hooks/useAuth'
 import { useUsuarios } from '@/hooks/useUsuarios'
 import { ROLES, ROL_LABEL, type Usuario } from '@/lib/database.types'
-import { normalizar } from '@/lib/format'
+import { formatFecha, normalizar } from '@/lib/format'
+import { ordenar, type Orden } from '@/lib/orden'
 import { cn } from '@/lib/utils'
+
+type CampoOrden = 'usuario' | 'nombre' | 'rol' | 'estado' | 'creado'
+
+function valorOrden(u: Usuario, campo: CampoOrden): unknown {
+  switch (campo) {
+    case 'usuario': return u.username
+    case 'nombre': return u.nombre !== u.username ? u.nombre : null
+    case 'rol': return ROL_LABEL[u.rol]
+    case 'estado': return u.activo ? 'Activo' : 'Inactivo'
+    case 'creado': return u.created_at
+  }
+}
 
 /**
  * Las personas del sistema. Las ven admin y supervisor (la ruta esta detras
@@ -45,16 +58,20 @@ export default function Usuarios() {
   const [roles, setRoles] = useState<string[]>([])
   const [estados, setEstados] = useState<string[]>([])
   const nFiltros = roles.length + estados.length
+  // Los mas nuevos primero; el orden se cambia haciendo clic en los titulos.
+  const [orden, setOrden] = useState<Orden<CampoOrden>>({ campo: 'creado', dir: 'desc' })
+  const th = { orden, onOrdenar: setOrden }
 
   const filtrados = useMemo(() => {
     const q = normalizar(busqueda)
-    return data.filter(
+    const pasan = data.filter(
       (u) =>
         (!q || normalizar(u.nombre).includes(q) || normalizar(u.username).includes(q)) &&
         (roles.length === 0 || roles.includes(ROL_LABEL[u.rol])) &&
         (estados.length === 0 || estados.includes(u.activo ? 'Activo' : 'Inactivo')),
     )
-  }, [data, busqueda, roles, estados])
+    return ordenar(pasan, orden, valorOrden)
+  }, [data, busqueda, roles, estados, orden])
 
   const [modalNuevo, setModalNuevo] = useState(false)
   const [modalDetalle, setModalDetalle] = useState<Usuario | null>(null)
@@ -78,7 +95,7 @@ export default function Usuarios() {
           <Buscador
             valor={busqueda}
             onCambiar={setBusqueda}
-            placeholder="Buscar por usuario o nombre…"
+            placeholder="Usuario o nombre…"
             className="order-last w-full sm:order-none sm:ml-auto sm:w-80"
             acciones={<AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((p) => !p)} insignia={nFiltros} activo={panel} />}
           />
@@ -122,10 +139,11 @@ export default function Usuarios() {
           <table className="w-full text-sm">
             <thead className="sticky top-0 z-10 whitespace-nowrap bg-card shadow-[0_1px_0_0_var(--color-border)]">
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                <th className="px-4 py-2.5 font-medium">Usuario</th>
-                <th className="hidden px-4 py-2.5 font-medium sm:table-cell">Nombre</th>
-                <th className="px-4 py-2.5 font-medium">Rol</th>
-                <th className="px-4 py-2.5 font-medium">Estado</th>
+                <Th campo="usuario" {...th} className="px-4">Usuario</Th>
+                <Th campo="nombre" {...th} className="px-4">Nombre</Th>
+                <Th campo="rol" {...th} className="px-4">Rol</Th>
+                <Th campo="estado" {...th} className="px-4">Estado</Th>
+                <Th campo="creado" {...th} className="px-4">Creado</Th>
               </tr>
             </thead>
             <tbody>
@@ -142,13 +160,14 @@ export default function Usuarios() {
                       {esYo(u) && <span className="text-xs font-normal text-muted-foreground">(vos)</span>}
                     </span>
                   </td>
-                  <td className="hidden max-w-[16rem] truncate whitespace-nowrap px-4 py-2.5 text-muted-foreground sm:table-cell">{u.nombre !== u.username ? u.nombre : ''}</td>
+                  <td className="max-w-[16rem] truncate whitespace-nowrap px-4 py-2.5 text-muted-foreground">{u.nombre !== u.username ? u.nombre : ''}</td>
                   <td className="whitespace-nowrap px-4 py-2.5 text-muted-foreground">{ROL_LABEL[u.rol]}</td>
                   <td className="px-4 py-2.5">
                     <Badge tono={u.activo ? 'success' : 'neutral'}>
                       {u.activo ? 'Activo' : 'Inactivo'}
                     </Badge>
                   </td>
+                  <td className="tabular whitespace-nowrap px-4 py-2.5 text-muted-foreground">{formatFecha(u.created_at)}</td>
                 </tr>
               ))}
             </tbody>

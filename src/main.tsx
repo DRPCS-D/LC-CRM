@@ -13,6 +13,19 @@ import './index.css'
 // documento y el del modulo arranquen sincronizados.
 aplicarTema()
 
+// Tras un despliegue, una pestana abierta pide archivos con nombre viejo que ya
+// no existen: se recarga una sola vez (la marca evita un bucle si el problema es otro).
+window.addEventListener('vite:preloadError', () => {
+  const marca = 'recarga-por-version'
+  try {
+    if (sessionStorage.getItem(marca)) return
+    sessionStorage.setItem(marca, '1')
+  } catch {
+    return
+  }
+  window.location.reload()
+})
+
 // dist/sw.js solo existe en el build de produccion (lo genera el plugin
 // de vite.config.ts); en `npm run dev` no hay nada que registrar.
 if (import.meta.env.PROD) registerServiceWorker()

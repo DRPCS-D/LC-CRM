@@ -6,6 +6,7 @@ import {
   Camera,
   Images,
   ImageUp,
+  FileText,
   ListFilter,
   Loader2,
   RotateCcw,
@@ -438,7 +439,7 @@ function NuevoPedido() {
 // Lista de pedidos
 // ═══════════════════════════════════════════════════════════════════════════
 
-type CampoOrden = 'nro' | 'fecha' | 'cliente' | 'ciudad' | 'marca' | 'usuario' | 'total'
+type CampoOrden = 'nro' | 'fecha' | 'cliente' | 'ciudad' | 'zona' | 'tipo' | 'marca' | 'pares' | 'usuario' | 'total'
 
 interface Filtros {
   busqueda: string
@@ -470,6 +471,9 @@ function valorOrden(p: Pedido, campo: CampoOrden): unknown {
     case 'fecha': return p.created_at
     case 'cliente': return p.cliente_nombre
     case 'ciudad': return p.ciudad
+    case 'zona': return p.zona
+    case 'tipo': return p.tipo
+    case 'pares': return p.total_pares
     case 'marca': return p.marca
     case 'usuario': return autorDe(p)
     case 'total': return p.total_precio
@@ -555,6 +559,19 @@ function ListaPedidos() {
     descargarCSV(`pedidos_${marcaDeTiempo()}.csv`, [cabecera, ...filas])
   }
 
+  const [exportando, setExportando] = useState(false)
+  async function exportarPDF() {
+    setExportando(true)
+    try {
+      const { pedidosPDF } = await import('@/lib/pdf')
+      await pedidosPDF(filtrados)
+    } catch {
+      toast.error('No se pudo generar el PDF.')
+    } finally {
+      setExportando(false)
+    }
+  }
+
   const th = { orden: f.orden, onOrdenar: (orden: Orden<CampoOrden>) => cambiar({ orden }) }
 
   return (
@@ -563,7 +580,7 @@ function ListaPedidos() {
         <Buscador
           valor={f.busqueda}
           onCambiar={(busqueda) => cambiar({ busqueda })}
-          placeholder="Buscar cliente, N° orden, marca…"
+          placeholder="Cliente o N° orden…"
           className="w-full sm:w-80"
           acciones={<AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((a) => !a)} insignia={nFiltros} activo={panel} />}
         />
@@ -592,6 +609,9 @@ function ListaPedidos() {
               <div className="ml-auto flex gap-2">
                 <Button variant="outline" onClick={exportar} disabled={filtrados.length === 0}>
                   <FileSpreadsheet /> Exportar Excel
+                </Button>
+                <Button variant="outline" onClick={exportarPDF} disabled={filtrados.length === 0 || exportando}>
+                  {exportando ? <Loader2 className="animate-spin" /> : <FileText />} Exportar PDF
                 </Button>
               </div>
             </div>
@@ -623,11 +643,14 @@ function ListaPedidos() {
               <thead className="sticky top-0 z-10 whitespace-nowrap bg-card shadow-[0_1px_0_0_var(--color-border)]">
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <Th campo="nro" {...th}>N° Orden</Th>
-                  <Th campo="fecha" {...th} className="hidden sm:table-cell">Fecha carga</Th>
+                  <Th campo="fecha" {...th}>Fecha carga</Th>
                   <Th campo="cliente" {...th}>Cliente</Th>
-                  <Th campo="ciudad" {...th} className="hidden lg:table-cell">Ciudad</Th>
-                  <Th campo="marca" {...th} className="hidden md:table-cell">Marca</Th>
-                  <Th campo="usuario" {...th} className="hidden md:table-cell">Usuario</Th>
+                  <Th campo="ciudad" {...th}>Ciudad</Th>
+                  <Th campo="zona" {...th}>Zona</Th>
+                  <Th campo="tipo" {...th}>Tipo</Th>
+                  <Th campo="marca" {...th}>Marca</Th>
+                  <Th campo="pares" {...th} className="text-right">Pares</Th>
+                  <Th campo="usuario" {...th}>Usuario</Th>
                   <Th campo="total" {...th} className="text-right">Total</Th>
                 </tr>
               </thead>
@@ -638,11 +661,14 @@ function ListaPedidos() {
                       {p.nro_orden_norm && repetidos.has(p.nro_orden_norm) && <AlertTriangle className="mr-1 inline size-3.5 text-warning" aria-label="N° de orden repetido" />}
                       {p.nro_orden}
                     </td>
-                    <td className="tabular hidden whitespace-nowrap px-3 py-2.5 text-muted-foreground sm:table-cell">{formatFechaHora(p.created_at)}</td>
+                    <td className="tabular whitespace-nowrap px-3 py-2.5 text-muted-foreground">{formatFechaHora(p.created_at)}</td>
                     <td className="max-w-[16rem] truncate whitespace-nowrap px-3 py-2.5" title={p.cliente_nombre ?? undefined}>{p.cliente_nombre}</td>
-                    <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground lg:table-cell" title={p.ciudad ?? undefined}>{p.ciudad}</td>
-                    <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground md:table-cell" title={p.marca ?? undefined}>{p.marca}</td>
-                    <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground md:table-cell">{autorDe(p)}</td>
+                    <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={p.ciudad ?? undefined}>{p.ciudad}</td>
+                    <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={p.zona ?? undefined}>{p.zona}</td>
+                    <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">{p.tipo}</td>
+                    <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={p.marca ?? undefined}>{p.marca}</td>
+                    <td className="tabular whitespace-nowrap px-3 py-2.5 text-right text-muted-foreground">{formatMiles(p.total_pares)}</td>
+                    <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground">{autorDe(p)}</td>
                     <td className="tabular whitespace-nowrap px-3 py-2.5 text-right">{formatGs(p.total_precio)}</td>
                   </tr>
                 ))}

@@ -1,4 +1,4 @@
-import { Download, FileDown, Printer, RefreshCw } from 'lucide-react'
+import { Download, FileDown, Printer } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardBody, CardHeader } from '@/components/ui/card'
@@ -38,7 +38,7 @@ const SECCIONES: { dim: Dimension; titulo: string }[] = [
 /** Reportes para admin y supervisor. Todo se calcula en el navegador a partir de los pedidos. */
 export default function Reportes() {
   const { usuario } = useAuth()
-  const { data, loading, actualizando, error, refetch } = usePedidos()
+  const { data, loading, error } = usePedidos()
   const [desde, setDesde] = useState(`${hoyLocal().slice(0, 4)}-01-01`)
   const [hasta, setHasta] = useState(hoyLocal())
   const [tipo, setTipo] = useState('')
@@ -66,9 +66,6 @@ export default function Reportes() {
             {TIPOS_PEDIDO.map((t) => <option key={t} value={t}>{t}</option>)}
           </Select>
         </Field>
-        <Button variant="outline" size="icon" onClick={() => refetch()} disabled={actualizando} aria-label="Actualizar" title="Actualizar">
-          <RefreshCw className={actualizando ? 'animate-spin' : ''} />
-        </Button>
         <Button onClick={() => setExportar(true)} disabled={filtrados.length === 0}><Download /> Exportar</Button>
       </div>
 

@@ -105,7 +105,7 @@ function ListaClientes() {
         <Buscador
           valor={busqueda}
           onCambiar={setBusqueda}
-          placeholder="Buscar por código, nombre, ciudad o zona…"
+          placeholder="Código, nombre o ciudad…"
           className="w-full sm:w-80"
           acciones={
             <AccionBuscador
@@ -171,9 +171,9 @@ function ListaClientes() {
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
                 <th className="px-3 py-2.5 font-medium">Código</th>
                 <th className="px-3 py-2.5 font-medium">Razón social</th>
-                <th className="hidden px-3 py-2.5 font-medium sm:table-cell">Nombre fantasía</th>
-                <th className="hidden px-3 py-2.5 font-medium md:table-cell">Ciudad</th>
-                <th className="hidden px-3 py-2.5 font-medium md:table-cell">Zona</th>
+                <th className="px-3 py-2.5 font-medium">Nombre fantasía</th>
+                <th className="px-3 py-2.5 font-medium">Ciudad</th>
+                <th className="px-3 py-2.5 font-medium">Zona</th>
               </tr>
             </thead>
             <tbody>
@@ -181,9 +181,9 @@ function ListaClientes() {
                 <tr key={c.id} onClick={() => setDetalle(c)} className="cursor-pointer border-b border-border last:border-0 hover:bg-accent/40">
                   <td className="tabular whitespace-nowrap px-3 py-2.5 text-muted-foreground">{c.codigo}</td>
                   <td className="max-w-[18rem] truncate whitespace-nowrap px-3 py-2.5 font-medium text-foreground" title={c.razon_social}>{c.razon_social}</td>
-                  <td className="hidden max-w-[16rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground sm:table-cell" title={c.nombre_fantasia ?? undefined}>{c.nombre_fantasia}</td>
-                  <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground md:table-cell" title={c.ciudad ?? undefined}>{c.ciudad}</td>
-                  <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground md:table-cell" title={c.zona ?? undefined}>{c.zona}</td>
+                  <td className="max-w-[16rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={c.nombre_fantasia ?? undefined}>{c.nombre_fantasia}</td>
+                  <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={c.ciudad ?? undefined}>{c.ciudad}</td>
+                  <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={c.zona ?? undefined}>{c.zona}</td>
                 </tr>
               ))}
             </tbody>

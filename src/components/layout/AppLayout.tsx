@@ -9,8 +9,9 @@ import {
   Users,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { CambiarMiPasswordModal } from '@/components/cuenta/CambiarMiPasswordModal'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Cargando } from '@/components/ui/estado'
@@ -49,6 +50,7 @@ const MENSAJE_PROBLEMA = {
 export default function AppLayout() {
   const { user, usuario, rol, veTodo, esCobrador, loading, problemaPerfil, signOut } = useAuth()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const [modalPassword, setModalPassword] = useState(false)
 
   const links = NAV.filter((item) => (!item.veTodo || veTodo) && !(esCobrador && item.sinCobrador))
@@ -127,7 +129,9 @@ export default function AppLayout() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 pb-24 pt-5 sm:px-6 md:pb-10 md:pt-8">
-        <Outlet />
+        <ErrorBoundary key={pathname.split('/')[1]}>
+          <Outlet />
+        </ErrorBoundary>
       </main>
 
       {/* Navegacion en mobile: barra fija abajo, al alcance del pulgar */}

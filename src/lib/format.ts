@@ -77,6 +77,13 @@ export function hoyLocal(): string {
   return diaLocal(new Date())
 }
 
+/** Fecha de hace `n` dias (para armar rangos como "ultima semana"). */
+export function haceDias(n: number): Date {
+  const f = new Date()
+  f.setDate(f.getDate() - n)
+  return f
+}
+
 /** Para nombres de archivo exportados: 20260314_1530. */
 export function marcaDeTiempo(): string {
   const { a, m, d, h, min } = partes(new Date())
