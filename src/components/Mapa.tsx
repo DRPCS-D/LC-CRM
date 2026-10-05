@@ -130,18 +130,35 @@ export default function Mapa({
     const clave = puntos.map((p) => p.id).join(',')
     if (clave !== claveAnterior.current) {
       claveAnterior.current = clave
-      if (puntos.length > 0) {
+      // Si hay un punto para enfocar (viene de "Ver en mapa"), no encuadrar
+      // todos: el otro efecto lo acerca, y los dos juntos se pisan.
+      if (enfocar && marcadores.current.has(enfocar)) {
+        // nada: lo resuelve el efecto de `enfocar`
+      } else if (puntos.length > 0) {
         m.fitBounds(L.latLngBounds(puntos.map((p) => [p.lat, p.lng])), { padding: [40, 40], maxZoom: 15 })
       } else {
         m.setView(PARAGUAY, 6)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puntos])
 
+  // Acerca el mapa al punto pedido y abre su popup. Una sola vez por punto:
+  // si la lista se refresca por detras, no se vuelve a mover el mapa.
+  const enfocado = useRef<string | null>(null)
   useEffect(() => {
-    if (!enfocar) return
+    if (!enfocar) {
+      enfocado.current = null
+      return
+    }
+    const m = mapa.current
     const marker = marcadores.current.get(enfocar)
-    if (!marker || !capa.current) return
+    if (!m || !marker || !capa.current || enfocado.current === enfocar) return
+    enfocado.current = enfocar
+    // Primero se centra de golpe (sin animacion, que se pisaba con el
+    // encuadre) y despues se pide mostrar el marcador: si sigue agrupado con
+    // otros en el mismo lugar, el cluster lo despliega.
+    m.setView(marker.getLatLng(), 17, { animate: false })
     capa.current.zoomToShowLayer(marker, () => marker.openPopup())
   }, [enfocar, puntos])
 
