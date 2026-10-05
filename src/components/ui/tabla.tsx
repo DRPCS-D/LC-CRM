@@ -1,9 +1,8 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
-import { createContext, useContext, useState, type ComponentType, type ReactNode } from 'react'
+import { ArrowDown, ArrowUp, ArrowUpDown, Search, X } from 'lucide-react'
+import { createContext, useContext, useEffect, useState, type ComponentType, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { Button } from './button'
 import type { Orden } from '@/lib/orden'
 import { Input } from './field'
 
@@ -19,12 +18,11 @@ const DescripcionCtx = createContext<HTMLElement | null>(null)
  */
 /**
  * Alto de una vista cuya tabla tiene scroll propio: la pantalla menos la barra
- * de arriba (3.5625rem) y el relleno de <main> en AppLayout (md: pt-8 + pb-10 =
- * 4.5rem). Si se toca el relleno de <main>, hay que tocar esto tambien. Solo
- * desde `md`: en el celular la pagina se desplaza normal (con KPIs y filtros
- * apilados, una tabla con scroll propio quedaria de 3 filas).
+ * de arriba (3.5625rem) y el relleno de <main> en AppLayout (celular: pt-5 +
+ * pb-24 = 7.25rem; md: pt-8 + pb-10 = 4.5rem). Si se toca el relleno de
+ * <main>, hay que tocar esto tambien.
  */
-export const ALTO_VISTA = 'md:h-[calc(100dvh-3.5625rem-4.5rem)]'
+export const ALTO_VISTA = 'h-[calc(100dvh-3.5625rem-7.25rem)] md:h-[calc(100dvh-3.5625rem-4.5rem)]'
 
 export function SeccionConTabs({
   titulo,
@@ -44,7 +42,7 @@ export function SeccionConTabs({
   return (
     <BarraTabsCtx.Provider value={{ buscador, accion }}>
       <DescripcionCtx.Provider value={descripcion}>
-        <div className={cn(ajustarAlto && `md:flex md:flex-col md:overflow-y-auto ${ALTO_VISTA}`)}>
+        <div className={cn(ajustarAlto && `flex flex-col overflow-y-auto ${ALTO_VISTA}`)}>
           <div className="mb-4 shrink-0">
             <h1 className="text-lg font-semibold text-foreground">{titulo}</h1>
             <p ref={setDescripcion} className="empty:hidden text-sm text-muted-foreground" />
@@ -54,7 +52,7 @@ export function SeccionConTabs({
             <div ref={setBuscador} className="order-last flex w-full items-center empty:hidden sm:order-none sm:ml-auto sm:w-auto" />
             <div ref={setAccion} className="ml-auto flex items-center empty:hidden sm:ml-0" />
           </div>
-          <div className={cn(ajustarAlto && 'md:flex md:min-h-0 md:flex-1 md:flex-col')}>{children}</div>
+          <div className={cn(ajustarAlto && 'flex min-h-0 flex-1 flex-col')}>{children}</div>
         </div>
       </DescripcionCtx.Provider>
     </BarraTabsCtx.Provider>
@@ -247,46 +245,57 @@ export function Th<K extends string>({
   )
 }
 
-export const TAMANO_PAGINA = 10
+/** Cuantas filas se muestran de entrada y cuantas se suman cada vez que se llega al final. */
+export const LOTE_FILAS = 50
 
-export function Paginacion({
-  pagina,
-  total,
-  onCambiar,
-  tamano = TAMANO_PAGINA,
-}: {
-  pagina: number
-  total: number
-  onCambiar: (p: number) => void
-  tamano?: number
-}) {
-  if (total === 0) return null
-  const paginas = Math.max(1, Math.ceil(total / tamano))
-  const desde = (pagina - 1) * tamano + 1
-  const hasta = Math.min(total, pagina * tamano)
+/**
+ * Carga progresiva de una lista que ya esta entera en memoria: se dibujan las
+ * primeras `LOTE_FILAS` y, al acercarse al final del scroll, otras tantas.
+ * `reinicio` es cualquier texto que cambie cuando cambian filtros, busqueda u
+ * orden: ahi se vuelve a las primeras filas. Poner `centinela` (ref) en un
+ * elemento al final de la lista, solo cuando `hayMas`.
+ */
+export function useCargaProgresiva(total: number, reinicio: string) {
+  const [cantidad, setCantidad] = useState(LOTE_FILAS)
+  const [anterior, setAnterior] = useState(reinicio)
+  const [el, setEl] = useState<HTMLElement | null>(null)
+  if (anterior !== reinicio) {
+    setAnterior(reinicio)
+    setCantidad(LOTE_FILAS)
+  }
+  const hayMas = cantidad < total
+
+  // Se vuelve a observar tras cada tanda: si el final sigue a la vista (pantalla
+  // alta), el observador no avisa de nuevo por si solo.
+  useEffect(() => {
+    if (!el || !hayMas) return
+    const obs = new IntersectionObserver(
+      (entradas) => {
+        if (entradas.some((e) => e.isIntersecting)) setCantidad((c) => c + LOTE_FILAS)
+      },
+      { rootMargin: '300px' },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [el, hayMas, cantidad])
+
+  return { cantidad, hayMas, centinela: setEl }
+}
+
+/** Marca el final de la lista: al verse, se cargan mas filas. Solo se pone cuando `hayMas`. */
+export function FinDeLista({ centinela }: { centinela: (el: HTMLElement | null) => void }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-2.5 text-xs text-muted-foreground">
-      <span className="tabular">
-        Mostrando {desde}–{hasta} de {total}
-      </span>
-      <div className="flex items-center gap-1">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={pagina <= 1}
-          onClick={() => onCambiar(pagina - 1)}
-        >
-          <ChevronLeft /> Anterior
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={pagina >= paginas}
-          onClick={() => onCambiar(pagina + 1)}
-        >
-          Siguiente <ChevronRight />
-        </Button>
-      </div>
+    <div ref={centinela} className="py-3 text-center text-xs text-muted-foreground">
+      Cargando más…
+    </div>
+  )
+}
+
+/** Pie fijo de la tabla: "Mostrando 50 de 1.337". */
+export function ContadorLista({ mostradas, total }: { mostradas: number; total: number }) {
+  return (
+    <div className="shrink-0 border-t border-border px-4 py-2 text-xs text-muted-foreground">
+      Mostrando {mostradas.toLocaleString('es-PY')} de {total.toLocaleString('es-PY')}
     </div>
   )
 }

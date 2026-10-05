@@ -70,7 +70,7 @@ export default function Usuarios() {
   }
 
   return (
-    <div className={cn('md:flex md:flex-col', ALTO_VISTA)}>
+    <div className={cn('flex flex-col', ALTO_VISTA)}>
       <div className="mb-5 flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-lg font-semibold text-foreground">Usuarios</h1>
@@ -122,9 +122,9 @@ export default function Usuarios() {
       ) : filtrados.length === 0 ? (
         <Vacio icono={UserRound} titulo="Sin resultados" descripcion="Probá con otra búsqueda." />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card md:min-h-0 md:flex-1 md:overflow-auto">
+        <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-border bg-card">
           <table className="w-full text-sm">
-            <thead className="bg-card md:sticky md:top-0 md:z-10 md:shadow-[0_1px_0_0_var(--color-border)]">
+            <thead className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--color-border)]">
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
                 <th className="px-4 py-2.5 font-medium">Usuario</th>
                 <th className="hidden px-4 py-2.5 font-medium sm:table-cell">Nombre</th>

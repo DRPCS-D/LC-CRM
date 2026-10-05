@@ -98,7 +98,7 @@ function ListaClientes() {
   }
 
   return (
-    <div className="md:flex md:min-h-0 md:flex-1 md:flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       {!loading && !error && (
         <EnDescripcion>
           {filtrados.length === data.length
@@ -170,9 +170,9 @@ function ListaClientes() {
       ) : filtrados.length === 0 ? (
         <Vacio icono={Store} titulo={data.length === 0 ? 'Todavía no hay clientes' : 'Sin resultados'} />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card md:min-h-0 md:flex-1 md:overflow-auto">
+        <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-border bg-card">
           <table className="w-full text-sm">
-            <thead className="bg-card md:sticky md:top-0 md:z-10 md:shadow-[0_1px_0_0_var(--color-border)]">
+            <thead className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--color-border)]">
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
                 <th className="px-3 py-2.5 font-medium">Código</th>
                 <th className="px-3 py-2.5 font-medium">Razón social</th>

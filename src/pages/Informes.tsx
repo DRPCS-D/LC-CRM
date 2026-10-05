@@ -24,7 +24,7 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Field, Input, Textarea } from '@/components/ui/field'
 import { ConfirmModal, Modal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { AccionBuscador, Buscador, EnBarraDeTabs, EnDescripcion, Paginacion, SeccionConTabs, TAMANO_PAGINA, Th } from '@/components/ui/tabla'
+import { AccionBuscador, Buscador, EnBarraDeTabs, EnDescripcion, ContadorLista, FinDeLista, SeccionConTabs, Th, useCargaProgresiva } from '@/components/ui/tabla'
 import { Avatar } from '@/components/ui/avatar'
 import { useAuth } from '@/hooks/useAuth'
 import { useEstadoSesion } from '@/hooks/useEstadoSesion'
@@ -379,7 +379,6 @@ type CampoOrden = 'fecha' | 'cliente' | 'ciudad' | 'zona' | 'usuario'
 
 interface Estado extends FiltrosInforme {
   orden: Orden<CampoOrden>
-  pagina: number
 }
 
 function valorOrden(i: Informe, c: CampoOrden): unknown {
@@ -394,18 +393,18 @@ function valorOrden(i: Informe, c: CampoOrden): unknown {
 
 function ListaInformes() {
   const { data, loading, error } = useInformes()
-  const [e, setE] = useEstadoSesion<Estado>('informes.filtros', { ...FILTROS_VACIOS, orden: { campo: 'fecha', dir: 'desc' }, pagina: 1 })
+  const [e, setE] = useEstadoSesion<Estado>('informes.filtros', { ...FILTROS_VACIOS, orden: { campo: 'fecha', dir: 'desc' } })
   // Plegado/desplegado vive aparte de los filtros: los valores se recuerdan al
   // cambiar de pantalla (sessionStorage), pero el panel arranca siempre plegado.
   const [panel, setPanel] = useState(false)
   const [abierto, setAbierto] = useState<Informe | null>(null)
 
-  const cambiar = (p: Partial<Estado>) => setE((s) => ({ ...s, pagina: 1, ...p }))
+  const cambiar = (p: Partial<Estado>) => setE((s) => ({ ...s, ...p }))
 
   const filtrados = useMemo(() => ordenar(filtrarInformes(data, e), e.orden, valorOrden), [data, e])
-  const paginas = Math.max(1, Math.ceil(filtrados.length / TAMANO_PAGINA))
-  const pagina = Math.min(e.pagina, paginas)
-  const visibles = filtrados.slice((pagina - 1) * TAMANO_PAGINA, pagina * TAMANO_PAGINA)
+  // Se dibujan de a tandas a medida que se baja; cualquier cambio de filtro u orden vuelve al principio.
+  const { cantidad, hayMas, centinela } = useCargaProgresiva(filtrados.length, JSON.stringify(e))
+  const visibles = filtrados.slice(0, cantidad)
   const th = { orden: e.orden, onOrdenar: (orden: Orden<CampoOrden>) => cambiar({ orden }) }
 
   function exportarCSV() {
@@ -427,7 +426,7 @@ function ListaInformes() {
   }
 
   return (
-    <div className="md:flex md:min-h-0 md:flex-1 md:flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <EnBarraDeTabs>
         <Buscador
           valor={e.busqueda}
@@ -471,10 +470,10 @@ function ListaInformes() {
       ) : filtrados.length === 0 ? (
         <Vacio icono={MapPinned} titulo={data.length === 0 ? 'Todavía no hay informes' : 'Sin resultados'} />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-card md:flex md:min-h-0 md:flex-1 md:flex-col">
-          <div className="overflow-x-auto md:min-h-0 md:flex-1 md:overflow-auto">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
+          <div className="min-h-0 flex-1 overflow-auto">
             <table className="w-full text-sm">
-              <thead className="bg-card md:sticky md:top-0 md:z-10 md:shadow-[0_1px_0_0_var(--color-border)]">
+              <thead className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--color-border)]">
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <Th campo="fecha" {...th}>Fecha</Th>
                   <Th campo="cliente" {...th}>Cliente</Th>
@@ -503,10 +502,9 @@ function ListaInformes() {
                 ))}
               </tbody>
             </table>
+            {hayMas && <FinDeLista centinela={centinela} />}
           </div>
-          <div className="shrink-0">
-            <Paginacion pagina={pagina} total={filtrados.length} onCambiar={(n) => setE((s) => ({ ...s, pagina: n }))} />
-          </div>
+          <ContadorLista mostradas={visibles.length} total={filtrados.length} />
         </div>
       )}
 

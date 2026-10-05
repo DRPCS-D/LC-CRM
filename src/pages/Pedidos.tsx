@@ -24,7 +24,7 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Input } from '@/components/ui/field'
 import { ConfirmModal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { AccionBuscador, Buscador, EnBarraDeTabs, Kpi, Paginacion, SeccionConTabs, TAMANO_PAGINA, Th } from '@/components/ui/tabla'
+import { AccionBuscador, Buscador, EnBarraDeTabs, ContadorLista, FinDeLista, Kpi, SeccionConTabs, Th, useCargaProgresiva } from '@/components/ui/tabla'
 import { useAuth } from '@/hooks/useAuth'
 import { useEstadoSesion } from '@/hooks/useEstadoSesion'
 import { mensajeDeError, pedidos as recursoPedidos, useClientes, usePedidos } from '@/hooks/useDatos'
@@ -449,7 +449,6 @@ interface Filtros {
   desde: string
   hasta: string
   orden: Orden<CampoOrden>
-  pagina: number
 }
 
 const FILTROS_INICIALES: Filtros = {
@@ -462,7 +461,6 @@ const FILTROS_INICIALES: Filtros = {
   desde: '',
   hasta: '',
   orden: { campo: 'fecha', dir: 'desc' },
-  pagina: 1,
 }
 
 function valorOrden(p: Pedido, campo: CampoOrden): unknown {
@@ -486,8 +484,7 @@ function ListaPedidos() {
   const [panel, setPanel] = useState(false)
   const [abierto, setAbierto] = useState<Pedido | null>(null)
 
-  // Cualquier cambio de filtro vuelve a la primera pagina
-  const cambiar = (p: Partial<Filtros>) => setF((s) => ({ ...s, pagina: 1, ...p }))
+  const cambiar = (p: Partial<Filtros>) => setF((s) => ({ ...s, ...p }))
 
   // N° de orden repetidos (comparando normalizados: '0011504' == '11.504')
   const repetidos = useMemo(() => {
@@ -533,9 +530,9 @@ function ListaPedidos() {
     [filtrados, repetidos],
   )
 
-  const paginas = Math.max(1, Math.ceil(filtrados.length / TAMANO_PAGINA))
-  const pagina = Math.min(f.pagina, paginas)
-  const visibles = filtrados.slice((pagina - 1) * TAMANO_PAGINA, pagina * TAMANO_PAGINA)
+  // Se dibujan de a tandas a medida que se baja; cualquier cambio de filtro u orden vuelve al principio.
+  const { cantidad, hayMas, centinela } = useCargaProgresiva(filtrados.length, JSON.stringify(f))
+  const visibles = filtrados.slice(0, cantidad)
 
   const nFiltros =
     f.clientes.length + f.marcas.length + f.usuarios.length + f.tipos.length + f.zonas.length + (f.desde ? 1 : 0) + (f.hasta ? 1 : 0)
@@ -560,7 +557,7 @@ function ListaPedidos() {
   const th = { orden: f.orden, onOrdenar: (orden: Orden<CampoOrden>) => cambiar({ orden }) }
 
   return (
-    <div className="md:flex md:min-h-0 md:flex-1 md:flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <EnBarraDeTabs>
         <Buscador
           valor={f.busqueda}
@@ -601,10 +598,10 @@ function ListaPedidos() {
         </Card>
       )}
 
-      <div className="mb-4 grid shrink-0 gap-3 sm:grid-cols-3">
+      <div className="mb-4 grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-3">
         <Kpi titulo="Pedidos (filtrados)" valor={formatMiles(filtrados.length)} />
         <Kpi titulo="Total pares" valor={formatMiles(totalPares)} />
-        <Kpi titulo="Suma total precio" valor={formatGs(totalPrecio)} />
+        <Kpi titulo="Suma total precio" valor={formatGs(totalPrecio)} className="col-span-2 sm:col-span-1" />
       </div>
       {duplicadosVisibles > 0 && (
         <div className="mb-4 shrink-0">
@@ -619,10 +616,10 @@ function ListaPedidos() {
       ) : filtrados.length === 0 ? (
         <Vacio icono={ClipboardList} titulo={data.length === 0 ? 'Todavía no hay pedidos' : 'Sin resultados'} descripcion={data.length === 0 ? undefined : 'Proba con otros filtros.'} />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-card md:flex md:min-h-0 md:flex-1 md:flex-col">
-          <div className="overflow-x-auto md:min-h-0 md:flex-1 md:overflow-auto">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
+          <div className="min-h-0 flex-1 overflow-auto">
             <table className="w-full text-sm">
-              <thead className="bg-card md:sticky md:top-0 md:z-10 md:shadow-[0_1px_0_0_var(--color-border)]">
+              <thead className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--color-border)]">
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <Th campo="nro" {...th}>N° Orden</Th>
                   <Th campo="fecha" {...th} className="hidden sm:table-cell">Fecha carga</Th>
@@ -650,10 +647,9 @@ function ListaPedidos() {
                 ))}
               </tbody>
             </table>
+            {hayMas && <FinDeLista centinela={centinela} />}
           </div>
-          <div className="shrink-0">
-            <Paginacion pagina={pagina} total={filtrados.length} onCambiar={(n) => setF((s) => ({ ...s, pagina: n }))} />
-          </div>
+          <ContadorLista mostradas={visibles.length} total={filtrados.length} />
         </div>
       )}
 
