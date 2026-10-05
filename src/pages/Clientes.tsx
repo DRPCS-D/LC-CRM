@@ -12,7 +12,7 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Field, Input } from '@/components/ui/field'
 import { ConfirmModal, Modal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { AccionBuscador, Buscador, ContadorLista, EnBarraDeTabs, EnDescripcion, Kpi, SeccionConTabs } from '@/components/ui/tabla'
+import { AccionBuscador, Buscador, ContadorLista, EnBarraDeTabs, Kpi, SeccionConTabs } from '@/components/ui/tabla'
 import { mensajeDeError, useClientes, usePedidos } from '@/hooks/useDatos'
 import { useAuth } from '@/hooks/useAuth'
 import { escaparHtml } from '@/lib/html'
@@ -99,13 +99,6 @@ function ListaClientes() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {!loading && !error && (
-        <EnDescripcion>
-          {filtrados.length === data.length
-            ? `${data.length.toLocaleString('es-PY')} clientes registrados.`
-            : `${filtrados.length.toLocaleString('es-PY')} de ${data.length.toLocaleString('es-PY')} clientes con los filtros aplicados.`}
-        </EnDescripcion>
-      )}
 
       <EnBarraDeTabs>
         <Buscador

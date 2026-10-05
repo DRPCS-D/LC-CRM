@@ -24,7 +24,7 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Field, Input, Textarea } from '@/components/ui/field'
 import { ConfirmModal, Modal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { AccionBuscador, Buscador, EnBarraDeTabs, EnDescripcion, ContadorLista, FinDeLista, SeccionConTabs, Th, useCargaProgresiva } from '@/components/ui/tabla'
+import { AccionBuscador, Buscador, EnBarraDeTabs, ContadorLista, FinDeLista, SeccionConTabs, Th, useCargaProgresiva } from '@/components/ui/tabla'
 import { Avatar } from '@/components/ui/avatar'
 import { useAuth } from '@/hooks/useAuth'
 import { useEstadoSesion } from '@/hooks/useEstadoSesion'
@@ -455,13 +455,6 @@ function ListaInformes() {
         />
       )}
 
-      {!loading && (
-        <EnDescripcion>
-        {filtrados.length === data.length
-          ? `${filtrados.length.toLocaleString('es-PY')} visitas registradas.`
-          : `${filtrados.length.toLocaleString('es-PY')} de ${data.length.toLocaleString('es-PY')} visitas con los filtros aplicados.`}
-        </EnDescripcion>
-      )}
 
       {loading ? (
         <Cargando />

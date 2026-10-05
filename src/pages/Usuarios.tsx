@@ -72,12 +72,7 @@ export default function Usuarios() {
   return (
     <div className={cn('flex flex-col', ALTO_VISTA)}>
       <div className="mb-5 flex shrink-0 flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">Usuarios</h1>
-          <p className="text-sm text-muted-foreground">
-            Accesos al sistema
-          </p>
-        </div>
+        <h1 className="text-lg font-semibold text-foreground">Usuarios</h1>
         {/* Celular: "Nuevo" a la altura del titulo y el buscador abajo, a todo el ancho. Escritorio: buscador y "Nuevo" a la derecha. */}
         {data.length > 0 && (
           <Buscador

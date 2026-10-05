@@ -57,7 +57,6 @@ export default function Reportes() {
       <div className="mb-5 flex flex-wrap items-end gap-3">
         <div className="mr-auto">
           <h1 className="text-lg font-semibold text-foreground">Reportes</h1>
-          <p className="text-sm text-muted-foreground">Ventas según los pedidos cargados.</p>
         </div>
         <Field label="Desde"><Input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} /></Field>
         <Field label="Hasta"><Input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} /></Field>

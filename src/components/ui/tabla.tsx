@@ -7,7 +7,6 @@ import type { Orden } from '@/lib/orden'
 import { Input } from './field'
 
 const BarraTabsCtx = createContext<{ buscador: HTMLElement | null; accion: HTMLElement | null }>({ buscador: null, accion: null })
-const DescripcionCtx = createContext<HTMLElement | null>(null)
 
 /**
  * Pestanas de la seccion con dos huecos en la misma linea: el del buscador y
@@ -42,14 +41,11 @@ export function SeccionConTabs({
 }) {
   const [buscador, setBuscador] = useState<HTMLElement | null>(null)
   const [accion, setAccion] = useState<HTMLElement | null>(null)
-  const [descripcion, setDescripcion] = useState<HTMLElement | null>(null)
   return (
     <BarraTabsCtx.Provider value={{ buscador, accion }}>
-      <DescripcionCtx.Provider value={descripcion}>
         <div className={cn(ajustarAlto && `flex flex-col overflow-y-auto ${ALTO_VISTA}`)}>
           <div className="mb-4 shrink-0">
             <h1 className="text-lg font-semibold text-foreground">{titulo}</h1>
-            <p ref={setDescripcion} className="empty:hidden text-sm text-muted-foreground" />
           </div>
           <div className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
             <SubTabs tabs={tabs} className="mb-0" />
@@ -58,15 +54,8 @@ export function SeccionConTabs({
           </div>
           <div className={cn(ajustarAlto && 'flex min-h-0 flex-1 flex-col')}>{children}</div>
         </div>
-      </DescripcionCtx.Provider>
     </BarraTabsCtx.Provider>
   )
-}
-
-/** Dibuja su contenido como descripcion bajo el titulo de <SeccionConTabs>. */
-export function EnDescripcion({ children }: { children: ReactNode }) {
-  const lugar = useContext(DescripcionCtx)
-  return lugar ? createPortal(children, lugar) : null
 }
 
 /** Dibuja su contenido en un hueco de <SeccionConTabs>: el buscador (por defecto) o la accion principal. */
