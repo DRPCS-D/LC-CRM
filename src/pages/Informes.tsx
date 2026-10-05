@@ -427,7 +427,7 @@ function ListaInformes() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-2 sm:justify-end">
         <Buscador
           valor={e.busqueda}
           onCambiar={(busqueda) => cambiar({ busqueda })}
