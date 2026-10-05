@@ -14,7 +14,7 @@
  * DESACTIVADOS durante la carga (si no, pisan la copia del cliente que trae el Sheet);
  * se reactivan al terminar.
  */
-import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, readFileSync, writeFileSync } from 'node:fs'
 import { randomInt } from 'node:crypto'
 import sharp from 'sharp'
 

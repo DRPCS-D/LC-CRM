@@ -41,32 +41,77 @@ export function Buscador({
   onCambiar,
   placeholder = 'Buscar…',
   className,
+  acciones,
 }: {
   valor: string
   onCambiar: (v: string) => void
   placeholder?: string
   className?: string
+  /** Botones (<AccionBuscador>) que van dentro del cuadro, a la derecha. */
+  acciones?: ReactNode
 }) {
   return (
     <div className={cn('relative', className)}>
       <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
-        className="pl-9 pr-8"
+        className={cn('pl-9', acciones ? 'pr-28' : 'pr-8')}
         placeholder={placeholder}
         value={valor}
         onChange={(e) => onCambiar(e.target.value)}
       />
-      {valor && (
-        <button
-          type="button"
-          onClick={() => onCambiar('')}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground"
-          aria-label="Limpiar búsqueda"
-        >
-          <X className="size-3.5" />
-        </button>
-      )}
+      <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-0.5">
+        {valor && (
+          <button
+            type="button"
+            onClick={() => onCambiar('')}
+            className="rounded p-1 text-muted-foreground hover:text-foreground"
+            aria-label="Limpiar búsqueda"
+          >
+            <X className="size-3.5" />
+          </button>
+        )}
+        {acciones}
+      </div>
     </div>
+  )
+}
+
+/** Boton de icono para el interior del buscador (filtros, exportar). `insignia` muestra un contador. */
+export function AccionBuscador({
+  icono: Icono,
+  titulo,
+  onClick,
+  disabled,
+  insignia,
+  activo,
+}: {
+  icono: ComponentType<{ className?: string }>
+  titulo: string
+  onClick: () => void
+  disabled?: boolean
+  insignia?: number
+  activo?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={titulo}
+      aria-label={titulo}
+      aria-pressed={activo}
+      className={cn(
+        'relative rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-40',
+        activo && 'bg-accent text-foreground',
+      )}
+    >
+      <Icono className="size-4" />
+      {!!insignia && (
+        <span className="absolute -right-0.5 -top-0.5 inline-flex size-3.5 items-center justify-center rounded-full bg-primary text-[9px] leading-none text-primary-foreground">
+          {insignia}
+        </span>
+      )}
+    </button>
   )
 }
 

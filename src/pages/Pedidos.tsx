@@ -1,7 +1,7 @@
 import {
   AlertTriangle,
   ClipboardList,
-  Download,
+  FileSpreadsheet,
   FilePlus2,
   Camera,
   Images,
@@ -25,7 +25,7 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Input } from '@/components/ui/field'
 import { ConfirmModal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { Buscador, Kpi, Paginacion, SubTabs, TAMANO_PAGINA, Th } from '@/components/ui/tabla'
+import { AccionBuscador, Buscador, Kpi, Paginacion, SubTabs, TAMANO_PAGINA, Th } from '@/components/ui/tabla'
 import { useAuth } from '@/hooks/useAuth'
 import { useEstadoSesion } from '@/hooks/useEstadoSesion'
 import { mensajeDeError, pedidos as recursoPedidos, useClientes, usePedidos } from '@/hooks/useDatos'
@@ -562,13 +562,19 @@ function ListaPedidos() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Buscador valor={f.busqueda} onCambiar={(busqueda) => cambiar({ busqueda })} placeholder="Buscar cliente, N° orden, marca…" className="w-full sm:max-w-sm" />
-        <Button variant="outline" onClick={() => setPanel((a) => !a)} className="relative">
-          <ListFilter /> Filtros
-          {nFiltros > 0 && <span className="ml-0.5 inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">{nFiltros}</span>}
-        </Button>
+        <Buscador
+          valor={f.busqueda}
+          onCambiar={(busqueda) => cambiar({ busqueda })}
+          placeholder="Buscar cliente, N° orden, marca…"
+          className="w-full sm:max-w-md"
+          acciones={
+            <>
+              <AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((a) => !a)} insignia={nFiltros} activo={panel} />
+              <AccionBuscador icono={FileSpreadsheet} titulo="Exportar a Excel" onClick={exportar} disabled={filtrados.length === 0} />
+            </>
+          }
+        />
         <div className="ml-auto flex gap-2">
-          <Button variant="outline" onClick={exportar} disabled={filtrados.length === 0}><Download /> Excel</Button>
           <Button variant="outline" size="icon" onClick={() => refetch()} disabled={actualizando} title="Actualizar" aria-label="Actualizar">
             <RefreshCw className={cn(actualizando && 'animate-spin')} />
           </Button>

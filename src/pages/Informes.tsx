@@ -1,6 +1,6 @@
 import {
   CircleCheck,
-  Download,
+  FileSpreadsheet,
   FilePlus2,
   FileText,
   ListFilter,
@@ -24,7 +24,7 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Field, Input, Textarea } from '@/components/ui/field'
 import { ConfirmModal, Modal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { Buscador, Kpi, Paginacion, SubTabs, TAMANO_PAGINA, Th } from '@/components/ui/tabla'
+import { AccionBuscador, Buscador, Kpi, Paginacion, SubTabs, TAMANO_PAGINA, Th } from '@/components/ui/tabla'
 import { Avatar } from '@/components/ui/avatar'
 import { useAuth } from '@/hooks/useAuth'
 import { useEstadoSesion } from '@/hooks/useEstadoSesion'
@@ -267,6 +267,10 @@ function contarFiltros(f: FiltrosInforme): number {
 }
 
 /** Boton "Filtros" con la cantidad de filtros activos, igual que en la tabla. */
+function IconoGirando({ className }: { className?: string }) {
+  return <Loader2 className={cn(className, 'animate-spin')} />
+}
+
 function BotonFiltros({ f, abierto, onAlternar }: { f: FiltrosInforme; abierto: boolean; onAlternar: () => void }) {
   const n = contarFiltros(f)
   return (
@@ -402,13 +406,20 @@ function ListaInformes() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Buscador valor={e.busqueda} onCambiar={(busqueda) => cambiar({ busqueda })} placeholder="Buscar cliente, comentario, usuario…" className="w-full sm:max-w-sm" />
-        <BotonFiltros f={e} abierto={panel} onAlternar={() => setPanel((a) => !a)} />
+        <Buscador
+          valor={e.busqueda}
+          onCambiar={(busqueda) => cambiar({ busqueda })}
+          placeholder="Buscar cliente, comentario, usuario…"
+          className="w-full sm:max-w-md"
+          acciones={
+            <>
+              <AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((a) => !a)} insignia={contarFiltros(e)} activo={panel} />
+              <AccionBuscador icono={FileSpreadsheet} titulo="Exportar a Excel" onClick={exportarCSV} disabled={filtrados.length === 0} />
+              <AccionBuscador icono={exportando ? IconoGirando : FileText} titulo="Exportar a PDF" onClick={exportarPDF} disabled={filtrados.length === 0 || exportando} />
+            </>
+          }
+        />
         <div className="ml-auto flex gap-2">
-          <Button variant="outline" onClick={exportarPDF} disabled={filtrados.length === 0 || exportando}>
-            {exportando ? <Loader2 className="animate-spin" /> : <Download />} PDF
-          </Button>
-          <Button variant="outline" onClick={exportarCSV} disabled={filtrados.length === 0}><Download /> Excel</Button>
           <Button variant="outline" size="icon" onClick={() => refetch()} disabled={actualizando} aria-label="Actualizar" title="Actualizar">
             <RefreshCw className={cn(actualizando && 'animate-spin')} />
           </Button>
