@@ -1,8 +1,9 @@
-import { ChevronLeft, ChevronRight, ListFilter, MapPin, Pencil, Plus, Store, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ListFilter, MapPin, Pencil, Plus, Store, Trash2, Upload } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, Route, Routes, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ClienteSelector } from '@/components/ClienteSelector'
+import { ImportarClientesModal } from '@/components/clientes/ImportarClientesModal'
 import { PedidoDetalleModal } from '@/components/pedidos/PedidoModales'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -61,6 +62,7 @@ function ListaClientes() {
   const [ciudades, setCiudades] = useState<string[]>([])
   const [zonas, setZonas] = useState<string[]>([])
   const [panel, setPanel] = useState(false)
+  const [importando, setImportando] = useState(false)
   const [detalle, setDetalle] = useState<Cliente | null>(null)
   const [edicion, setEdicion] = useState<Cliente | 'nuevo' | null>(null)
   const [borrar, setBorrar] = useState<Cliente | null>(null)
@@ -134,13 +136,29 @@ function ListaClientes() {
           <CardBody className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MultiSelect label="Ciudad" opciones={opcionesDe(data, (c) => c.ciudad)} seleccion={ciudades} onCambiar={setCiudades} />
             <MultiSelect label="Zona" opciones={opcionesDe(data, (c) => c.zona)} seleccion={zonas} onCambiar={setZonas} />
-            <div className="flex items-end">
+            <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4 sm:col-span-2 lg:col-span-4">
               <Button variant="ghost" disabled={ciudades.length + zonas.length === 0} onClick={() => { setCiudades([]); setZonas([]) }}>
                 Limpiar filtros
               </Button>
+              {esAdmin && (
+                <div className="ml-auto flex gap-2">
+                  <Button variant="outline" onClick={() => setImportando(true)}>
+                    <Upload /> Importar
+                  </Button>
+                </div>
+              )}
             </div>
           </CardBody>
         </Card>
+      )}
+
+      {esAdmin && (
+        <ImportarClientesModal
+          abierto={importando}
+          clientes={data}
+          onCerrar={() => setImportando(false)}
+          onImportado={refetch}
+        />
       )}
 
       {loading ? (
