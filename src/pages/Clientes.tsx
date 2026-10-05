@@ -108,7 +108,7 @@ function ListaClientes() {
           valor={busqueda}
           onCambiar={setBusqueda}
           placeholder="Buscar por código, nombre, ciudad o zona…"
-          className="w-full sm:w-80"
+          className="min-w-0 flex-1 sm:w-80 sm:flex-none"
           acciones={
             <AccionBuscador
               icono={ListFilter}
@@ -120,7 +120,7 @@ function ListaClientes() {
           }
         />
         {esAdmin && (
-          <Button className="hidden sm:inline-flex" onClick={() => setEdicion('nuevo')}>
+          <Button onClick={() => setEdicion('nuevo')}>
             <Plus /> Nuevo
           </Button>
         )}
@@ -138,12 +138,6 @@ function ListaClientes() {
             </div>
           </CardBody>
         </Card>
-      )}
-
-      {esAdmin && (
-        <Button className="mb-4 w-full sm:hidden" onClick={() => setEdicion('nuevo')}>
-          <Plus /> Nuevo
-        </Button>
       )}
 
       {loading ? (
