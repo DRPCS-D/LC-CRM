@@ -89,7 +89,7 @@ export default function Reportes() {
           </div>
 
           <Card>
-            <CardHeader title="Evolucion mensual" description="Barras: monto. Linea: cantidad de pedidos." />
+            <CardHeader title="Evolución mensual" description="Barras: monto. Línea: cantidad de pedidos." />
             <CardBody><GraficoMensual serie={serie} /></CardBody>
           </Card>
 
@@ -132,7 +132,7 @@ function GraficoMensual({ serie }: { serie: PuntoMes[] }) {
   const variosAnios = new Set(serie.map((s) => s.mes.slice(0, 4))).size > 1
   const ANCHO_COL = 56
   const ALTO = 240
-  const M = { t: 16, r: 44, b: 30, l: 52 }
+  const M = { t: 16, r: 44, b: 30, l: 64 }
   const ancho = Math.max(560, serie.length * ANCHO_COL + M.l + M.r)
   const areaW = ancho - M.l - M.r
   const areaH = ALTO - M.t - M.b
@@ -146,7 +146,7 @@ function GraficoMensual({ serie }: { serie: PuntoMes[] }) {
 
   return (
     <div className="overflow-x-auto">
-      <svg viewBox={`0 0 ${ancho} ${ALTO}`} style={{ width: ancho, minWidth: '100%' }} role="img" aria-label="Evolucion mensual de pedidos">
+      <svg viewBox={`0 0 ${ancho} ${ALTO}`} style={{ width: ancho, minWidth: '100%' }} role="img" aria-label="Evolución mensual de pedidos">
         {[0, 0.25, 0.5, 0.75, 1].map((t) => (
           <g key={t}>
             <line x1={M.l} x2={ancho - M.r} y1={M.t + areaH * (1 - t)} y2={M.t + areaH * (1 - t)} stroke="currentColor" strokeOpacity={0.1} />

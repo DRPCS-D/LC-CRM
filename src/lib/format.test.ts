@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  formatCompacto,
   diaLocal,
   esMontoValido,
   formatFecha,
@@ -99,5 +100,15 @@ describe('fechas en hora de Asuncion', () => {
     expect(formatFechaHora('2026-03-11T01:30:00Z')).toBe('10/03/2026 22:30')
     expect(formatFecha('2026-03-11T01:30:00Z')).toBe('10/03/2026')
     expect(diaLocal('2026-03-11T01:30:00Z')).toBe('2026-03-10')
+  })
+})
+
+describe('formatCompacto (ejes de graficos, como se lee en Paraguay)', () => {
+  it('usa millones y punto de miles, sin "B" ni "K"', () => {
+    expect(formatCompacto(9661600)).toBe('9,7 M')
+    expect(formatCompacto(3300000000)).toBe('3.300 M')
+    expect(formatCompacto(13000000000)).toBe('13.000 M')
+    expect(formatCompacto(450000)).toBe('450 mil')
+    expect(formatCompacto(0)).toBe('0')
   })
 })

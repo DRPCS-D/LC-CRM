@@ -113,13 +113,21 @@ export function formatGs(n: number | null | undefined): string {
   return `Gs. ${formatMiles(n)}`
 }
 
-/** 9661600 → '9,7M'. Para ejes de graficos. */
+/**
+ * Para ejes de graficos, como se lee en Paraguay: en millones (no hay "B" ni
+ * "K"), con punto de miles y 2 cifras significativas.
+ *   9661600 → '9,7 M' · 3300000000 → '3.300 M' · 13000000000 → '13.000 M' · 450000 → '450 mil'
+ */
 export function formatCompacto(n: number): string {
   const abs = Math.abs(n)
-  const fmt = (v: number) => v.toFixed(v < 10 ? 1 : 0).replace('.', ',').replace(/,0$/, '')
-  if (abs >= 1e9) return `${fmt(n / 1e9)}B`
-  if (abs >= 1e6) return `${fmt(n / 1e6)}M`
-  if (abs >= 1e3) return `${fmt(n / 1e3)}K`
+  const signo = n < 0 ? '-' : ''
+  if (abs >= 1e6) {
+    const m = abs / 1e6
+    if (m < 10) return `${signo}${m.toFixed(1).replace('.', ',').replace(/,0$/, '')} M`
+    const paso = 10 ** (Math.floor(Math.log10(m)) - 1)
+    return `${signo}${formatMiles(Math.round(m / paso) * paso)} M`
+  }
+  if (abs >= 1e3) return `${signo}${formatMiles(Math.round(abs / 1e3))} mil`
   return String(Math.round(n))
 }
 
