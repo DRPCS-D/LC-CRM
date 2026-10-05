@@ -495,7 +495,7 @@ function ListaInformes() {
                       {i.comentario}
                     </td>
                     <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground sm:table-cell">{autorDe(i)}</td>
-                    <td className="px-3 py-2.5" onClick={(ev) => ev.stopPropagation()}>
+                    <td className="whitespace-nowrap px-3 py-2.5" onClick={(ev) => ev.stopPropagation()}>
                       <Link to={`/informes/mapa?informe=${i.id}`} className="text-primary hover:underline">Ver en mapa</Link>
                     </td>
                   </tr>

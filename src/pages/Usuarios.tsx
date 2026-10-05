@@ -8,7 +8,7 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Card, CardBody } from '@/components/ui/card'
 import { ConfirmModal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { ALTO_VISTA, AccionBuscador, Buscador } from '@/components/ui/tabla'
+import { ALTO_VISTA, AccionBuscador, Buscador, ContadorLista } from '@/components/ui/tabla'
 import {
   EditarUsuarioModal,
   NuevoUsuarioModal,
@@ -122,7 +122,8 @@ export default function Usuarios() {
       ) : filtrados.length === 0 ? (
         <Vacio icono={UserRound} titulo="Sin resultados" descripcion="Probá con otra búsqueda." />
       ) : (
-        <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-border bg-card">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
+          <div className="min-h-0 flex-1 overflow-auto">
           <table className="w-full text-sm">
             <thead className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--color-border)]">
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
@@ -157,6 +158,8 @@ export default function Usuarios() {
               ))}
             </tbody>
           </table>
+          </div>
+          <ContadorLista mostradas={filtrados.length} total={data.length} />
         </div>
       )}
 

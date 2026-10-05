@@ -12,7 +12,7 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Field, Input } from '@/components/ui/field'
 import { ConfirmModal, Modal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { AccionBuscador, Buscador, EnBarraDeTabs, EnDescripcion, Kpi, SeccionConTabs } from '@/components/ui/tabla'
+import { AccionBuscador, Buscador, ContadorLista, EnBarraDeTabs, EnDescripcion, Kpi, SeccionConTabs } from '@/components/ui/tabla'
 import { mensajeDeError, useClientes, usePedidos } from '@/hooks/useDatos'
 import { useAuth } from '@/hooks/useAuth'
 import { escaparHtml } from '@/lib/html'
@@ -170,7 +170,8 @@ function ListaClientes() {
       ) : filtrados.length === 0 ? (
         <Vacio icono={Store} titulo={data.length === 0 ? 'Todavía no hay clientes' : 'Sin resultados'} />
       ) : (
-        <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-border bg-card">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
+          <div className="min-h-0 flex-1 overflow-auto">
           <table className="w-full text-sm">
             <thead className="sticky top-0 z-10 bg-card shadow-[0_1px_0_0_var(--color-border)]">
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
@@ -193,9 +194,10 @@ function ListaClientes() {
               ))}
             </tbody>
           </table>
+          </div>
+          <ContadorLista mostradas={filtrados.length} total={data.length} />
         </div>
       )}
-      <p className="mt-2 text-xs text-muted-foreground">{filtrados.length} de {data.length} clientes</p>
 
       <ClienteDetalleModal
         cliente={detalle}
