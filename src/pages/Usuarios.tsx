@@ -112,15 +112,15 @@ export default function Usuarios() {
                   onClick={() => setModalDetalle(u)}
                   className="cursor-pointer border-b border-border last:border-0 hover:bg-accent/40"
                 >
-                  <td className="px-4 py-2.5 font-medium text-foreground">
+                  <td className="whitespace-nowrap px-4 py-2.5 font-medium text-foreground">
                     <span className="flex items-center gap-2.5">
                       <Avatar nombre={u.username} fotoPath={u.foto_path} className="size-7 text-[11px]" />
                       {u.username}
                       {esYo(u) && <span className="text-xs font-normal text-muted-foreground">(vos)</span>}
                     </span>
                   </td>
-                  <td className="hidden px-4 py-2.5 text-muted-foreground sm:table-cell">{u.nombre !== u.username ? u.nombre : ''}</td>
-                  <td className="px-4 py-2.5 text-muted-foreground">{ROL_LABEL[u.rol]}</td>
+                  <td className="hidden max-w-[16rem] truncate whitespace-nowrap px-4 py-2.5 text-muted-foreground sm:table-cell">{u.nombre !== u.username ? u.nombre : ''}</td>
+                  <td className="whitespace-nowrap px-4 py-2.5 text-muted-foreground">{ROL_LABEL[u.rol]}</td>
                   <td className="px-4 py-2.5">
                     <Badge tono={u.activo ? 'success' : 'neutral'}>
                       {u.activo ? 'Activo' : 'Inactivo'}

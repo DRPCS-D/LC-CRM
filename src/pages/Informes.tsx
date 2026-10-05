@@ -450,13 +450,13 @@ function ListaInformes() {
                 {visibles.map((i) => (
                   <tr key={i.id} onClick={() => setAbierto(i)} className="cursor-pointer border-b border-border last:border-0 hover:bg-accent/40">
                     <td className="tabular whitespace-nowrap px-3 py-2.5 text-muted-foreground">{formatFechaHora(i.created_at)}</td>
-                    <td className="max-w-[14rem] truncate px-3 py-2.5 font-medium">{i.cliente_nombre}</td>
-                    <td className="hidden px-3 py-2.5 text-muted-foreground lg:table-cell">{i.ciudad}</td>
-                    <td className="hidden px-3 py-2.5 text-muted-foreground lg:table-cell">{i.zona}</td>
-                    <td className="hidden max-w-xs px-3 py-2.5 text-muted-foreground md:table-cell">
-                      {(i.comentario ?? '').length > 60 ? `${i.comentario!.slice(0, 60)}…` : i.comentario}
+                    <td className="max-w-[14rem] truncate whitespace-nowrap px-3 py-2.5 font-medium" title={i.cliente_nombre ?? undefined}>{i.cliente_nombre}</td>
+                    <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground lg:table-cell" title={i.ciudad ?? undefined}>{i.ciudad}</td>
+                    <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground lg:table-cell" title={i.zona ?? undefined}>{i.zona}</td>
+                    <td className="hidden max-w-xs truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground md:table-cell" title={i.comentario ?? undefined}>
+                      {i.comentario}
                     </td>
-                    <td className="hidden px-3 py-2.5 text-muted-foreground sm:table-cell">{autorDe(i)}</td>
+                    <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground sm:table-cell">{autorDe(i)}</td>
                     <td className="px-3 py-2.5" onClick={(ev) => ev.stopPropagation()}>
                       <Link to={`/informes/mapa?informe=${i.id}`} className="text-primary hover:underline">Ver en mapa</Link>
                     </td>

@@ -640,10 +640,10 @@ function ListaPedidos() {
                       {p.nro_orden}
                     </td>
                     <td className="tabular hidden whitespace-nowrap px-3 py-2.5 text-muted-foreground sm:table-cell">{formatFechaHora(p.created_at)}</td>
-                    <td className="max-w-[16rem] truncate px-3 py-2.5">{p.cliente_nombre}</td>
-                    <td className="hidden px-3 py-2.5 text-muted-foreground lg:table-cell">{p.ciudad}</td>
-                    <td className="hidden px-3 py-2.5 text-muted-foreground md:table-cell">{p.marca}</td>
-                    <td className="hidden px-3 py-2.5 text-muted-foreground md:table-cell">{autorDe(p)}</td>
+                    <td className="max-w-[16rem] truncate whitespace-nowrap px-3 py-2.5" title={p.cliente_nombre ?? undefined}>{p.cliente_nombre}</td>
+                    <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground lg:table-cell" title={p.ciudad ?? undefined}>{p.ciudad}</td>
+                    <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground md:table-cell" title={p.marca ?? undefined}>{p.marca}</td>
+                    <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground md:table-cell">{autorDe(p)}</td>
                     <td className="tabular whitespace-nowrap px-3 py-2.5 text-right">{formatGs(p.total_precio)}</td>
                   </tr>
                 ))}

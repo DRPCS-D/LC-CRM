@@ -131,11 +131,11 @@ function ListaClientes() {
             <tbody>
               {filtrados.map((c) => (
                 <tr key={c.id} onClick={() => setDetalle(c)} className="cursor-pointer border-b border-border last:border-0 hover:bg-accent/40">
-                  <td className="tabular px-3 py-2.5 text-muted-foreground">{c.codigo}</td>
-                  <td className="px-3 py-2.5 font-medium text-foreground">{c.razon_social}</td>
-                  <td className="hidden px-3 py-2.5 text-muted-foreground sm:table-cell">{c.nombre_fantasia}</td>
-                  <td className="hidden px-3 py-2.5 text-muted-foreground md:table-cell">{c.ciudad}</td>
-                  <td className="hidden px-3 py-2.5 text-muted-foreground md:table-cell">{c.zona}</td>
+                  <td className="tabular whitespace-nowrap px-3 py-2.5 text-muted-foreground">{c.codigo}</td>
+                  <td className="max-w-[18rem] truncate whitespace-nowrap px-3 py-2.5 font-medium text-foreground" title={c.razon_social}>{c.razon_social}</td>
+                  <td className="hidden max-w-[16rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground sm:table-cell" title={c.nombre_fantasia ?? undefined}>{c.nombre_fantasia}</td>
+                  <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground md:table-cell" title={c.ciudad ?? undefined}>{c.ciudad}</td>
+                  <td className="hidden max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground md:table-cell" title={c.zona ?? undefined}>{c.zona}</td>
                 </tr>
               ))}
             </tbody>
