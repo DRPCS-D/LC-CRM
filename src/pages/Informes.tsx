@@ -46,6 +46,7 @@ export default function Informes() {
     <div>
       <SeccionConTabs
         ajustarAlto={pathname.endsWith('/lista')}
+        tituloEnCelular={false}
         titulo="Informes de visita"
         tabs={[
           { to: '/informes', label: 'Nuevo', end: true, icono: FilePlus2 },

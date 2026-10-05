@@ -54,6 +54,7 @@ export default function Pedidos() {
     <div>
       <SeccionConTabs
         ajustarAlto={pathname.endsWith('/lista')}
+        tituloEnCelular={false}
         titulo="Pedidos"
         tabs={[
           { to: '/pedidos', label: 'Nuevo', end: true, icono: FilePlus2 },
