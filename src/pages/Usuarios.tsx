@@ -1,12 +1,14 @@
-import { Plus, Search, UserRound } from 'lucide-react'
+import { ListFilter, Plus, UserRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
-import { Input } from '@/components/ui/field'
+import { Card, CardBody } from '@/components/ui/card'
 import { ConfirmModal } from '@/components/ui/modal'
+import { MultiSelect } from '@/components/ui/multiselect'
+import { AccionBuscador, Buscador } from '@/components/ui/tabla'
 import {
   EditarUsuarioModal,
   NuevoUsuarioModal,
@@ -14,7 +16,7 @@ import {
 } from '@/components/usuarios/UsuarioModales'
 import { useAuth } from '@/hooks/useAuth'
 import { useUsuarios } from '@/hooks/useUsuarios'
-import { ROL_LABEL, type Usuario } from '@/lib/database.types'
+import { ROLES, ROL_LABEL, type Usuario } from '@/lib/database.types'
 import { normalizar } from '@/lib/format'
 
 /**
@@ -38,12 +40,20 @@ export default function Usuarios() {
   } = useUsuarios()
 
   const [busqueda, setBusqueda] = useState('')
+  const [panel, setPanel] = useState(false)
+  const [roles, setRoles] = useState<string[]>([])
+  const [estados, setEstados] = useState<string[]>([])
+  const nFiltros = roles.length + estados.length
 
   const filtrados = useMemo(() => {
     const q = normalizar(busqueda)
-    if (!q) return data
-    return data.filter((u) => normalizar(u.nombre).includes(q) || normalizar(u.username).includes(q))
-  }, [data, busqueda])
+    return data.filter(
+      (u) =>
+        (!q || normalizar(u.nombre).includes(q) || normalizar(u.username).includes(q)) &&
+        (roles.length === 0 || roles.includes(ROL_LABEL[u.rol])) &&
+        (estados.length === 0 || estados.includes(u.activo ? 'Activo' : 'Inactivo')),
+    )
+  }, [data, busqueda, roles, estados])
 
   const [modalNuevo, setModalNuevo] = useState(false)
   const [modalDetalle, setModalDetalle] = useState<Usuario | null>(null)
@@ -75,15 +85,28 @@ export default function Usuarios() {
       </div>
 
       {data.length > 0 && (
-        <div className="relative mb-4 max-w-sm">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-9"
+        <>
+          <Buscador
+            valor={busqueda}
+            onCambiar={setBusqueda}
             placeholder="Buscar por usuario o nombre…"
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
+            className="mb-4 w-full sm:w-80"
+            acciones={<AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((p) => !p)} insignia={nFiltros} activo={panel} />}
           />
-        </div>
+          {panel && (
+            <Card className="mb-4">
+              <CardBody className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <MultiSelect label="Rol" opciones={ROLES.map((r) => ROL_LABEL[r])} seleccion={roles} onCambiar={setRoles} />
+                <MultiSelect label="Estado" opciones={['Activo', 'Inactivo']} seleccion={estados} onCambiar={setEstados} />
+                <div className="flex items-end">
+                  <Button variant="ghost" disabled={nFiltros === 0} onClick={() => { setRoles([]); setEstados([]) }}>
+                    Limpiar filtros
+                  </Button>
+                </div>
+              </CardBody>
+            </Card>
+          )}
+        </>
       )}
 
       {loading ? (

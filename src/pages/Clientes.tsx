@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, MapPin, Pencil, Plus, Store, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ListFilter, MapPin, Pencil, Plus, Store, Trash2 } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, Route, Routes, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -6,11 +6,12 @@ import { ClienteSelector } from '@/components/ClienteSelector'
 import { PedidoDetalleModal } from '@/components/pedidos/PedidoModales'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardBody } from '@/components/ui/card'
 import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Field, Input } from '@/components/ui/field'
 import { ConfirmModal, Modal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { Buscador, Kpi, SubTabs } from '@/components/ui/tabla'
+import { AccionBuscador, Buscador, EnBarraDeTabs, Kpi, SeccionConTabs } from '@/components/ui/tabla'
 import { mensajeDeError, useClientes, usePedidos } from '@/hooks/useDatos'
 import { useAuth } from '@/hooks/useAuth'
 import { escaparHtml } from '@/lib/html'
@@ -34,17 +35,18 @@ export default function Clientes() {
       <div className="mb-4">
         <h1 className="text-lg font-semibold text-foreground">Clientes</h1>
       </div>
-      <SubTabs
+      <SeccionConTabs
         tabs={[
           { to: '/clientes', label: 'Clientes', end: true },
           { to: '/clientes/mapa', label: 'Mapa' },
         ]}
-      />
-      <Routes>
-        <Route index element={<ListaClientes />} />
-        <Route path="mapa" element={<MapaClientes />} />
-        <Route path="*" element={<Navigate to="/clientes" replace />} />
-      </Routes>
+      >
+        <Routes>
+          <Route index element={<ListaClientes />} />
+          <Route path="mapa" element={<MapaClientes />} />
+          <Route path="*" element={<Navigate to="/clientes" replace />} />
+        </Routes>
+      </SeccionConTabs>
     </div>
   )
 }
@@ -60,6 +62,7 @@ function ListaClientes() {
   const [busqueda, setBusqueda] = useState('')
   const [ciudades, setCiudades] = useState<string[]>([])
   const [zonas, setZonas] = useState<string[]>([])
+  const [panel, setPanel] = useState(false)
   const [detalle, setDetalle] = useState<Cliente | null>(null)
   const [edicion, setEdicion] = useState<Cliente | 'nuevo' | null>(null)
   const [borrar, setBorrar] = useState<Cliente | null>(null)
@@ -94,21 +97,48 @@ function ListaClientes() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-end gap-3">
+      <EnBarraDeTabs>
         <Buscador
           valor={busqueda}
           onCambiar={setBusqueda}
           placeholder="Buscar por código, nombre, ciudad o zona…"
-          className="w-full sm:max-w-sm"
+          className="w-full sm:w-80"
+          acciones={
+            <AccionBuscador
+              icono={ListFilter}
+              titulo="Filtros"
+              onClick={() => setPanel((p) => !p)}
+              insignia={ciudades.length + zonas.length}
+              activo={panel}
+            />
+          }
         />
-        <MultiSelect enLinea label="Ciudad" opciones={opcionesDe(data, (c) => c.ciudad)} seleccion={ciudades} onCambiar={setCiudades} className="w-44" />
-        <MultiSelect enLinea label="Zona" opciones={opcionesDe(data, (c) => c.zona)} seleccion={zonas} onCambiar={setZonas} className="w-44" />
         {esAdmin && (
-          <Button className="ml-auto" onClick={() => setEdicion('nuevo')}>
-            <Plus /> Nuevo cliente
+          <Button className="hidden sm:inline-flex" onClick={() => setEdicion('nuevo')}>
+            <Plus /> Nuevo
           </Button>
         )}
-      </div>
+      </EnBarraDeTabs>
+
+      {panel && (
+        <Card className="mb-4">
+          <CardBody className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <MultiSelect label="Ciudad" opciones={opcionesDe(data, (c) => c.ciudad)} seleccion={ciudades} onCambiar={setCiudades} />
+            <MultiSelect label="Zona" opciones={opcionesDe(data, (c) => c.zona)} seleccion={zonas} onCambiar={setZonas} />
+            <div className="flex items-end">
+              <Button variant="ghost" disabled={ciudades.length + zonas.length === 0} onClick={() => { setCiudades([]); setZonas([]) }}>
+                Limpiar filtros
+              </Button>
+            </div>
+          </CardBody>
+        </Card>
+      )}
+
+      {esAdmin && (
+        <Button className="mb-4 w-full sm:hidden" onClick={() => setEdicion('nuevo')}>
+          <Plus /> Nuevo
+        </Button>
+      )}
 
       {loading ? (
         <Cargando />

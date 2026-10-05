@@ -12,7 +12,7 @@ import {
   RefreshCw,
   Trash2,
 } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, Navigate, Route, Routes, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ClienteSelector } from '@/components/ClienteSelector'
@@ -24,7 +24,7 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Field, Input, Textarea } from '@/components/ui/field'
 import { ConfirmModal, Modal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { AccionBuscador, Buscador, Kpi, Paginacion, SubTabs, TAMANO_PAGINA, Th } from '@/components/ui/tabla'
+import { AccionBuscador, Buscador, EnBarraDeTabs, Kpi, Paginacion, SeccionConTabs, TAMANO_PAGINA, Th } from '@/components/ui/tabla'
 import { Avatar } from '@/components/ui/avatar'
 import { useAuth } from '@/hooks/useAuth'
 import { useEstadoSesion } from '@/hooks/useEstadoSesion'
@@ -46,19 +46,20 @@ export default function Informes() {
       <div className="mb-4">
         <h1 className="text-lg font-semibold text-foreground">Informes de visita</h1>
       </div>
-      <SubTabs
+      <SeccionConTabs
         tabs={[
           { to: '/informes', label: 'Nuevo', end: true, icono: FilePlus2 },
           { to: '/informes/lista', label: 'Informes', icono: FileText },
           { to: '/informes/mapa', label: 'Mapa', icono: MapIcon },
         ]}
-      />
-      <Routes>
-        <Route index element={<NuevoInforme />} />
-        <Route path="lista" element={<ListaInformes />} />
-        <Route path="mapa" element={<MapaInformes />} />
-        <Route path="*" element={<Navigate to="/informes" replace />} />
-      </Routes>
+      >
+        <Routes>
+          <Route index element={<NuevoInforme />} />
+          <Route path="lista" element={<ListaInformes />} />
+          <Route path="mapa" element={<MapaInformes />} />
+          <Route path="*" element={<Navigate to="/informes" replace />} />
+        </Routes>
+      </SeccionConTabs>
     </div>
   )
 }
@@ -267,10 +268,6 @@ function contarFiltros(f: FiltrosInforme): number {
 }
 
 /** Boton "Filtros" con la cantidad de filtros activos, igual que en la tabla. */
-function IconoGirando({ className }: { className?: string }) {
-  return <Loader2 className={cn(className, 'animate-spin')} />
-}
-
 function BotonFiltros({ f, abierto, onAlternar }: { f: FiltrosInforme; abierto: boolean; onAlternar: () => void }) {
   const n = contarFiltros(f)
   return (
@@ -327,10 +324,13 @@ function PanelFiltros({
   data,
   f,
   onCambiar,
+  exportar,
 }: {
   data: Informe[]
   f: FiltrosInforme
   onCambiar: (p: Partial<FiltrosInforme>) => void
+  /** Botones de exportar (solo en la lista). */
+  exportar?: ReactNode
 }) {
   const { veTodo } = useAuth()
   const opciones = useMemo(
@@ -359,10 +359,11 @@ function PanelFiltros({
             <p className="mb-1.5 text-xs font-medium text-muted-foreground">Hasta</p>
             <Input type="date" value={f.hasta} onChange={(e) => onCambiar({ hasta: e.target.value })} />
           </div>
-          <div className="flex items-end">
+          <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4 sm:col-span-2 lg:col-span-4">
             <Button variant="ghost" disabled={contarFiltros(f) === 0} onClick={() => onCambiar({ ...FILTROS_VACIOS, busqueda: f.busqueda })}>
               Limpiar filtros
             </Button>
+            {exportar && <div className="ml-auto flex gap-2">{exportar}</div>}
           </div>
         </div>
       </CardBody>
@@ -427,23 +428,33 @@ function ListaInformes() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-2 sm:justify-end">
+      <EnBarraDeTabs>
         <Buscador
           valor={e.busqueda}
           onCambiar={(busqueda) => cambiar({ busqueda })}
           placeholder="Buscar cliente, comentario, usuario…"
-          className="w-full sm:max-w-md"
-          acciones={
+          className="w-full sm:w-80"
+          acciones={<AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((a) => !a)} insignia={contarFiltros(e)} activo={panel} />}
+        />
+      </EnBarraDeTabs>
+
+      {panel && (
+        <PanelFiltros
+          data={data}
+          f={e}
+          onCambiar={cambiar}
+          exportar={
             <>
-              <AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((a) => !a)} insignia={contarFiltros(e)} activo={panel} />
-              <AccionBuscador icono={FileSpreadsheet} titulo="Exportar a Excel" onClick={exportarCSV} disabled={filtrados.length === 0} />
-              <AccionBuscador icono={exportando ? IconoGirando : FileText} titulo="Exportar a PDF" onClick={exportarPDF} disabled={filtrados.length === 0 || exportando} />
+              <Button variant="outline" onClick={exportarCSV} disabled={filtrados.length === 0}>
+                <FileSpreadsheet /> Exportar Excel
+              </Button>
+              <Button variant="outline" onClick={exportarPDF} disabled={filtrados.length === 0 || exportando}>
+                {exportando ? <Loader2 className="animate-spin" /> : <FileText />} Exportar PDF
+              </Button>
             </>
           }
         />
-      </div>
-
-      {panel && <PanelFiltros data={data} f={e} onCambiar={cambiar} />}
+      )}
 
       <div className="mb-4 max-w-xs"><Kpi titulo="Visitas (filtradas)" valor={filtrados.length} /></div>
 

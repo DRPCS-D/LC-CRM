@@ -24,7 +24,7 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Input } from '@/components/ui/field'
 import { ConfirmModal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { AccionBuscador, Buscador, Kpi, Paginacion, SubTabs, TAMANO_PAGINA, Th } from '@/components/ui/tabla'
+import { AccionBuscador, Buscador, EnBarraDeTabs, Kpi, Paginacion, SeccionConTabs, TAMANO_PAGINA, Th } from '@/components/ui/tabla'
 import { useAuth } from '@/hooks/useAuth'
 import { useEstadoSesion } from '@/hooks/useEstadoSesion'
 import { mensajeDeError, pedidos as recursoPedidos, useClientes, usePedidos } from '@/hooks/useDatos'
@@ -54,17 +54,18 @@ export default function Pedidos() {
       <div className="mb-4">
         <h1 className="text-lg font-semibold text-foreground">Pedidos</h1>
       </div>
-      <SubTabs
+      <SeccionConTabs
         tabs={[
           { to: '/pedidos', label: 'Nuevo', end: true, icono: FilePlus2 },
           { to: '/pedidos/lista', label: 'Pedidos', icono: ClipboardList },
         ]}
-      />
-      <Routes>
-        <Route index element={<NuevoPedido />} />
-        <Route path="lista" element={<ListaPedidos />} />
-        <Route path="*" element={<Navigate to="/pedidos" replace />} />
-      </Routes>
+      >
+        <Routes>
+          <Route index element={<NuevoPedido />} />
+          <Route path="lista" element={<ListaPedidos />} />
+          <Route path="*" element={<Navigate to="/pedidos" replace />} />
+        </Routes>
+      </SeccionConTabs>
     </div>
   )
 }
@@ -560,20 +561,15 @@ function ListaPedidos() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-2 sm:justify-end">
+      <EnBarraDeTabs>
         <Buscador
           valor={f.busqueda}
           onCambiar={(busqueda) => cambiar({ busqueda })}
           placeholder="Buscar cliente, N° orden, marca…"
-          className="w-full sm:max-w-md"
-          acciones={
-            <>
-              <AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((a) => !a)} insignia={nFiltros} activo={panel} />
-              <AccionBuscador icono={FileSpreadsheet} titulo="Exportar a Excel" onClick={exportar} disabled={filtrados.length === 0} />
-            </>
-          }
+          className="w-full sm:w-80"
+          acciones={<AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((a) => !a)} insignia={nFiltros} activo={panel} />}
         />
-      </div>
+      </EnBarraDeTabs>
 
       {panel && (
         <Card className="mb-4">
@@ -591,10 +587,15 @@ function ListaPedidos() {
               <p className="mb-1.5 text-xs font-medium text-muted-foreground">Hasta</p>
               <Input type="date" value={f.hasta} onChange={(e) => cambiar({ hasta: e.target.value })} />
             </div>
-            <div className="flex items-end">
+            <div className="flex flex-wrap items-center gap-2 border-t border-border pt-4 sm:col-span-2 lg:col-span-4">
               <Button variant="ghost" onClick={() => cambiar({ clientes: [], marcas: [], usuarios: [], tipos: [], zonas: [], desde: '', hasta: '' })} disabled={nFiltros === 0}>
                 Limpiar filtros
               </Button>
+              <div className="ml-auto flex gap-2">
+                <Button variant="outline" onClick={exportar} disabled={filtrados.length === 0}>
+                  <FileSpreadsheet /> Exportar Excel
+                </Button>
+              </div>
             </div>
           </CardBody>
         </Card>

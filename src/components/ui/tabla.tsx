@@ -1,19 +1,44 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Search, X } from 'lucide-react'
-import type { ComponentType, ReactNode } from 'react'
+import { createContext, useContext, useState, type ComponentType, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { Button } from './button'
 import type { Orden } from '@/lib/orden'
 import { Input } from './field'
 
-/** Pestanas de una seccion (Nuevo | Lista | Mapa), como links de ruta. */
-export function SubTabs({
-  tabs,
-}: {
-  tabs: { to: string; label: string; end?: boolean; icono?: ComponentType<{ className?: string }> }[]
-}) {
+const BarraTabsCtx = createContext<HTMLElement | null>(null)
+
+/**
+ * Pestanas de la seccion con un hueco a la derecha, en la misma linea. Lo que
+ * la pestana activa pase por <EnBarraDeTabs> (el buscador, "Nuevo") aparece ahi.
+ * En el celular el hueco baja a su propia linea.
+ */
+export function SeccionConTabs({ tabs, children }: { tabs: Tab[]; children: ReactNode }) {
+  const [hueco, setHueco] = useState<HTMLElement | null>(null)
   return (
-    <div className="mb-5 flex gap-1 overflow-x-auto rounded-lg border border-border bg-card p-1 shadow-xs sm:inline-flex">
+    <BarraTabsCtx.Provider value={hueco}>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <SubTabs tabs={tabs} className="mb-0" />
+        <div ref={setHueco} className="flex w-full items-center gap-2 sm:w-auto" />
+      </div>
+      {children}
+    </BarraTabsCtx.Provider>
+  )
+}
+
+/** Dibuja su contenido en el hueco de <SeccionConTabs>. */
+export function EnBarraDeTabs({ children }: { children: ReactNode }) {
+  const hueco = useContext(BarraTabsCtx)
+  return hueco ? createPortal(children, hueco) : null
+}
+
+/** Pestanas de una seccion (Nuevo | Lista | Mapa), como links de ruta. */
+type Tab = { to: string; label: string; end?: boolean; icono?: ComponentType<{ className?: string }> }
+
+export function SubTabs({ tabs, className }: { tabs: Tab[]; className?: string }) {
+  return (
+    <div className={cn('mb-5 flex gap-1 overflow-x-auto rounded-lg border border-border bg-card p-1 shadow-xs sm:inline-flex', className)}>
       {tabs.map(({ to, label, end, icono: Icono }) => (
         <NavLink
           key={to}
