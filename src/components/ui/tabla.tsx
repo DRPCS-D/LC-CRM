@@ -7,27 +7,31 @@ import { Button } from './button'
 import type { Orden } from '@/lib/orden'
 import { Input } from './field'
 
-const BarraTabsCtx = createContext<HTMLElement | null>(null)
+const BarraTabsCtx = createContext<{ buscador: HTMLElement | null; accion: HTMLElement | null }>({ buscador: null, accion: null })
 const DescripcionCtx = createContext<HTMLElement | null>(null)
 
 /**
- * Pestanas de la seccion con un hueco a la derecha, en la misma linea. Lo que
- * la pestana activa pase por <EnBarraDeTabs> (el buscador, "Nuevo") aparece ahi.
- * En el celular el hueco baja a su propia linea.
+ * Pestanas de la seccion con dos huecos en la misma linea: el del buscador y
+ * el de la accion principal ("Nuevo"). Lo que la pestana activa pase por
+ * <EnBarraDeTabs> aparece ahi. En escritorio van a la derecha de las pestanas
+ * (buscador y despues accion); en el celular la accion queda a la altura de
+ * las pestanas y el buscador baja a su propia linea, a todo el ancho.
  */
 export function SeccionConTabs({ titulo, tabs, children }: { titulo: string; tabs: Tab[]; children: ReactNode }) {
-  const [hueco, setHueco] = useState<HTMLElement | null>(null)
+  const [buscador, setBuscador] = useState<HTMLElement | null>(null)
+  const [accion, setAccion] = useState<HTMLElement | null>(null)
   const [descripcion, setDescripcion] = useState<HTMLElement | null>(null)
   return (
-    <BarraTabsCtx.Provider value={hueco}>
+    <BarraTabsCtx.Provider value={{ buscador, accion }}>
       <DescripcionCtx.Provider value={descripcion}>
         <div className="mb-4">
           <h1 className="text-lg font-semibold text-foreground">{titulo}</h1>
           <p ref={setDescripcion} className="empty:hidden text-sm text-muted-foreground" />
         </div>
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-center gap-3">
           <SubTabs tabs={tabs} className="mb-0" />
-          <div ref={setHueco} className="flex w-full items-center gap-2 sm:w-auto" />
+          <div ref={setBuscador} className="order-last flex w-full items-center empty:hidden sm:order-none sm:ml-auto sm:w-auto" />
+          <div ref={setAccion} className="ml-auto flex items-center empty:hidden sm:ml-0" />
         </div>
         {children}
       </DescripcionCtx.Provider>
@@ -41,9 +45,10 @@ export function EnDescripcion({ children }: { children: ReactNode }) {
   return lugar ? createPortal(children, lugar) : null
 }
 
-/** Dibuja su contenido en el hueco de <SeccionConTabs>. */
-export function EnBarraDeTabs({ children }: { children: ReactNode }) {
-  const hueco = useContext(BarraTabsCtx)
+/** Dibuja su contenido en un hueco de <SeccionConTabs>: el buscador (por defecto) o la accion principal. */
+export function EnBarraDeTabs({ children, lugar = 'buscador' }: { children: ReactNode; lugar?: 'buscador' | 'accion' }) {
+  const huecos = useContext(BarraTabsCtx)
+  const hueco = huecos[lugar]
   return hueco ? createPortal(children, hueco) : null
 }
 

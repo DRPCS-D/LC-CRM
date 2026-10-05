@@ -108,7 +108,7 @@ function ListaClientes() {
           valor={busqueda}
           onCambiar={setBusqueda}
           placeholder="Buscar por código, nombre, ciudad o zona…"
-          className="min-w-0 flex-1 sm:w-80 sm:flex-none"
+          className="w-full sm:w-80"
           acciones={
             <AccionBuscador
               icono={ListFilter}
@@ -119,12 +119,15 @@ function ListaClientes() {
             />
           }
         />
-        {esAdmin && (
+      </EnBarraDeTabs>
+
+      {esAdmin && (
+        <EnBarraDeTabs lugar="accion">
           <Button onClick={() => setEdicion('nuevo')}>
             <Plus /> Nuevo
           </Button>
-        )}
-      </EnBarraDeTabs>
+        </EnBarraDeTabs>
+      )}
 
       {panel && (
         <Card className="mb-4">

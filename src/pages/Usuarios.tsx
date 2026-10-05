@@ -74,25 +74,24 @@ export default function Usuarios() {
         <div>
           <h1 className="text-lg font-semibold text-foreground">Usuarios</h1>
           <p className="text-sm text-muted-foreground">
-            Quiénes tienen acceso al sistema y con qué rol.
+            Accesos al sistema
           </p>
         </div>
-        <div className="flex w-full items-center gap-2 sm:w-auto">
-          {data.length > 0 && (
-            <Buscador
-              valor={busqueda}
-              onCambiar={setBusqueda}
-              placeholder="Buscar por usuario o nombre…"
-              className="min-w-0 flex-1 sm:w-80 sm:flex-none"
-              acciones={<AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((p) => !p)} insignia={nFiltros} activo={panel} />}
-            />
-          )}
-          {esAdmin && (
-            <Button onClick={() => setModalNuevo(true)}>
-              <Plus /> Nuevo
-            </Button>
-          )}
-        </div>
+        {/* Celular: "Nuevo" a la altura del titulo y el buscador abajo, a todo el ancho. Escritorio: buscador y "Nuevo" a la derecha. */}
+        {data.length > 0 && (
+          <Buscador
+            valor={busqueda}
+            onCambiar={setBusqueda}
+            placeholder="Buscar por usuario o nombre…"
+            className="order-last w-full sm:order-none sm:ml-auto sm:w-80"
+            acciones={<AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((p) => !p)} insignia={nFiltros} activo={panel} />}
+          />
+        )}
+        {esAdmin && (
+          <Button className="ml-auto sm:ml-0" onClick={() => setModalNuevo(true)}>
+            <Plus /> Nuevo
+          </Button>
+        )}
       </div>
 
       {data.length > 0 && (
