@@ -2,8 +2,9 @@
  * Importar clientes desde un Excel: lectura del archivo y comparacion con los
  * clientes que ya estan cargados. Un cliente que ya existe (mismo codigo) se
  * actualiza; uno que no existe se crea; los que no estan en el archivo no se
- * tocan. Una celda vacia en el archivo NO borra el dato que ya tenia el
- * cliente.
+ * tocan. Una celda vacia en el archivo NO borra ciudad, zona ni ubicacion del
+ * cliente; el nombre de fantasia SI se vacia (si el archivo trae esa columna).
+ * La razon social es obligatoria: vacia en un cliente existente es un error.
  *
  * La comparacion es pura (sin red ni Excel) para poder probarla; `exceljs`
  * pesa, asi que solo se carga al leer o generar un archivo.
@@ -73,7 +74,7 @@ export function textoDeCelda(v: unknown): string {
 }
 
 /** Busca la fila de encabezados y arma las filas del archivo. Devuelve un error legible si faltan columnas. */
-export function filasDeHoja(matriz: unknown[][]): { filas: FilaArchivo[] } | { error: string } {
+export function filasDeHoja(matriz: unknown[][]): { filas: FilaArchivo[]; columnas: Set<Columna> } | { error: string } {
   const idxEnc = matriz.findIndex((f) => f.some((c) => ALIAS.Codigo.includes(clave(textoDeCelda(c)))))
   if (idxEnc < 0) return { error: 'No se encontró la columna "Codigo". Descargá la plantilla y respetá los nombres de las columnas.' }
   const enc = matriz[idxEnc].map((c) => clave(textoDeCelda(c)))
@@ -97,7 +98,7 @@ export function filasDeHoja(matriz: unknown[][]): { filas: FilaArchivo[] } | { e
     // Las filas totalmente vacias (o con solo el ejemplo en blanco) se saltan.
     if (Object.entries(fila).some(([k, v]) => k !== 'fila' && v !== '')) filas.push(fila)
   })
-  return { filas }
+  return { filas, columnas: new Set(COLUMNAS.filter((c) => idx[c] >= 0)) }
 }
 
 function numero(t: string): number | null {
@@ -107,7 +108,7 @@ function numero(t: string): number | null {
 }
 
 /** Compara las filas del archivo con los clientes actuales. */
-export function compararClientes(filas: FilaArchivo[], existentes: Cliente[]): Resultado[] {
+export function compararClientes(filas: FilaArchivo[], existentes: Cliente[], columnas: ReadonlySet<Columna> = new Set(COLUMNAS)): Resultado[] {
   const porCodigo = new Map(existentes.map((c) => [normalizarCodigo(c.codigo), c]))
   const vistos = new Map<string, number>()
   const salida: Resultado[] = []
@@ -147,11 +148,14 @@ export function compararClientes(filas: FilaArchivo[], existentes: Cliente[]): R
       continue
     }
 
-    // Existente: lo que viene vacio en el archivo se conserva.
+    // Existente. La razon social es obligatoria: si viene vacia es un error, no se pisa en silencio.
+    if (f.razon_social.trim().length < 2) { salida.push(err('La razón social no puede quedar vacía.')); continue }
+    // Fantasia: vacia en el archivo = se vacia (solo si la columna existe; sin columna no se toca).
+    // Ciudad, zona y ubicacion: vacias en el archivo = se conserva lo que ya tenia.
     const datos: DatosCliente = {
       codigo: actual.codigo,
-      razon_social: f.razon_social.trim() || actual.razon_social,
-      nombre_fantasia: f.nombre_fantasia.trim() || actual.nombre_fantasia,
+      razon_social: f.razon_social.trim(),
+      nombre_fantasia: columnas.has('NombreFantasia') ? f.nombre_fantasia.trim() || null : actual.nombre_fantasia,
       ciudad: f.ciudad.trim() || actual.ciudad,
       zona: f.zona.trim() || actual.zona,
       lat: lat ?? actual.lat,
@@ -169,7 +173,7 @@ export function compararClientes(filas: FilaArchivo[], existentes: Cliente[]): R
 }
 
 /** Lee la primera hoja del .xlsx. */
-export async function leerExcel(archivo: File): Promise<{ filas: FilaArchivo[] } | { error: string }> {
+export async function leerExcel(archivo: File): Promise<{ filas: FilaArchivo[]; columnas: Set<Columna> } | { error: string }> {
   if (archivo.size > LIMITE_BYTES) return { error: 'El archivo pesa más de 5 MB.' }
   if (!/\.xlsx$/i.test(archivo.name)) return { error: 'El archivo tiene que ser un Excel .xlsx. Si es .xls o .csv, abrilo en Excel y guardalo como .xlsx.' }
   const { default: ExcelJS } = await import('exceljs')
@@ -224,7 +228,7 @@ export async function descargarPlantilla(): Promise<void> {
     '2. No cambies los nombres de la primera fila (Codigo, RazonSocial, NombreFantasia, Ciudad, Zona, Lat, Lng).',
     '3. Codigo es obligatorio y es lo que identifica al cliente: si ese código ya existe en la app, se actualizan sus datos; si no existe, se crea.',
     '4. RazonSocial es obligatoria para los clientes nuevos. Los demás datos son opcionales.',
-    '5. Una celda vacía NO borra el dato que el cliente ya tiene en la app: solo se cambia lo que viene completo.',
+    '5. En un cliente que ya existe: si NombreFantasia queda vacío, se borra el nombre de fantasía; la RazonSocial no puede quedar vacía. Ciudad, Zona y la ubicación (Lat/Lng) vacías NO borran lo que el cliente ya tiene.',
     '6. Lat y Lng van juntas (ej. -25.2637 y -57.5759) o las dos vacías. Se acepta punto o coma decimal.',
     '7. Los clientes que no estén en el archivo no se tocan.',
     '8. Antes de guardar, la app muestra un resumen (nuevos, a actualizar, sin cambios y filas con errores) para confirmar.',

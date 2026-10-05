@@ -62,7 +62,7 @@ export function ImportarClientesModal({
       const lectura = await leerExcel(archivo)
       if ('error' in lectura) setError(lectura.error)
       else if (lectura.filas.length === 0) setError('El archivo no tiene clientes para importar.')
-      else setResultados(compararClientes(lectura.filas, clientes))
+      else setResultados(compararClientes(lectura.filas, clientes, lectura.columnas))
     } catch {
       setError('No se pudo leer el archivo.')
     } finally {

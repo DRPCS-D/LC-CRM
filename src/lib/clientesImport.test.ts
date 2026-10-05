@@ -55,19 +55,35 @@ describe('filasDeHoja', () => {
 describe('compararClientes', () => {
   it('crea el que no existe y actualiza el que si, por codigo', () => {
     const r = compararClientes(
-      [fila({ codigo: '297109.0', razon_social: 'NUEVO NOMBRE' }), fila({ codigo: '5', razon_social: 'OTRO' }, 3)],
+      [fila({ codigo: '297109.0', razon_social: 'NUEVO NOMBRE', nombre_fantasia: 'TIENDA' }), fila({ codigo: '5', razon_social: 'OTRO' }, 3)],
       [existente],
     )
     expect(r[0]).toMatchObject({ tipo: 'actualizar', id: 'id-1', cambios: ['razón social'] })
     expect(r[1]).toMatchObject({ tipo: 'nuevo', fila: 3 })
   })
-  it('una celda vacia no borra el dato que ya tenia', () => {
-    const r = compararClientes([fila({ codigo: '297109', razon_social: 'EJEMPLO S.A.', zona: 'ESTE' })], [existente])
-    expect(r[0]).toMatchObject({ tipo: 'actualizar', cambios: ['zona'] })
-    if (r[0].tipo === 'actualizar') expect(r[0].datos).toMatchObject({ nombre_fantasia: 'TIENDA', ciudad: 'ASUNCION', lat: -25.26 })
+  it('ciudad, zona y ubicacion vacias no borran lo que ya tenia', () => {
+    const r = compararClientes([fila({ codigo: '297109', razon_social: 'EJEMPLO S.A.', nombre_fantasia: 'TIENDA' })], [existente])
+    expect(r[0].tipo).toBe('sin-cambios')
+    const r2 = compararClientes([fila({ codigo: '297109', razon_social: 'EJEMPLO S.A.', nombre_fantasia: 'TIENDA', zona: 'ESTE' })], [existente])
+    expect(r2[0]).toMatchObject({ tipo: 'actualizar', cambios: ['zona'] })
+    if (r2[0].tipo === 'actualizar') expect(r2[0].datos).toMatchObject({ ciudad: 'ASUNCION', lat: -25.26, lng: -57.57 })
+  })
+  it('el nombre de fantasia vacio en el archivo se vacia', () => {
+    const r = compararClientes([fila({ codigo: '297109', razon_social: 'EJEMPLO S.A.' })], [existente])
+    expect(r[0]).toMatchObject({ tipo: 'actualizar', cambios: ['nombre fantasía'] })
+    if (r[0].tipo === 'actualizar') expect(r[0].datos.nombre_fantasia).toBeNull()
+  })
+  it('si el archivo no trae la columna NombreFantasia, no se toca', () => {
+    const cols = new Set(['Codigo', 'RazonSocial', 'Ciudad'] as const)
+    const r = compararClientes([fila({ codigo: '297109', razon_social: 'EJEMPLO S.A.' })], [existente], cols)
+    expect(r[0].tipo).toBe('sin-cambios')
+  })
+  it('la razon social vacia en un cliente existente es un error, no se pisa', () => {
+    const r = compararClientes([fila({ codigo: '297109', ciudad: 'LUQUE' })], [existente])
+    expect(r[0]).toMatchObject({ tipo: 'error', motivo: 'La razón social no puede quedar vacía.' })
   })
   it('sin diferencias queda como sin-cambios', () => {
-    expect(compararClientes([fila({ codigo: '297109', razon_social: 'EJEMPLO S.A.', ciudad: 'ASUNCION' })], [existente])[0].tipo).toBe('sin-cambios')
+    expect(compararClientes([fila({ codigo: '297109', razon_social: 'EJEMPLO S.A.', nombre_fantasia: 'TIENDA', ciudad: 'ASUNCION' })], [existente])[0].tipo).toBe('sin-cambios')
   })
   it('marca errores: sin codigo, repetido, nuevo sin razon social, coordenadas', () => {
     const r = compararClientes(
