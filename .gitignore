@@ -46,4 +46,4 @@ credenciales.local.json
 docs/guia-de-uso/
 
 # Datos reales del Sheet (clientes, pedidos, usuarios): nunca al repo publico
-migracion/
+/migracion/
