@@ -13,7 +13,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Link, Navigate, Route, Routes, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ClienteSelector } from '@/components/ClienteSelector'
 import type { PuntoMapa } from '@/components/Mapa'
@@ -41,9 +41,11 @@ import { cn } from '@/lib/utils'
 const Mapa = lazy(() => import('@/components/Mapa'))
 
 export default function Informes() {
+  const { pathname } = useLocation()
   return (
     <div>
       <SeccionConTabs
+        ajustarAlto={pathname.endsWith('/lista')}
         titulo="Informes de visita"
         tabs={[
           { to: '/informes', label: 'Nuevo', end: true, icono: FilePlus2 },
@@ -342,7 +344,7 @@ function PanelFiltros({
   )
 
   return (
-    <Card className="mb-4">
+    <Card className="mb-4 shrink-0">
       <CardBody className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MultiSelect label="Cliente" opciones={opciones.clientes} seleccion={f.clientes} onCambiar={(clientes) => onCambiar({ clientes })} />
@@ -425,7 +427,7 @@ function ListaInformes() {
   }
 
   return (
-    <div>
+    <div className="md:flex md:min-h-0 md:flex-1 md:flex-col">
       <EnBarraDeTabs>
         <Buscador
           valor={e.busqueda}
@@ -469,10 +471,10 @@ function ListaInformes() {
       ) : filtrados.length === 0 ? (
         <Vacio icono={MapPinned} titulo={data.length === 0 ? 'Todavía no hay informes' : 'Sin resultados'} />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-card xl:overflow-clip">
-          <div className="overflow-x-auto xl:overflow-visible">
+        <div className="overflow-hidden rounded-lg border border-border bg-card md:flex md:min-h-0 md:flex-1 md:flex-col">
+          <div className="overflow-x-auto md:min-h-0 md:flex-1 md:overflow-auto">
             <table className="w-full text-sm">
-              <thead className="bg-card xl:sticky xl:top-14 xl:z-10 xl:shadow-[0_1px_0_0_var(--color-border)]">
+              <thead className="bg-card md:sticky md:top-0 md:z-10 md:shadow-[0_1px_0_0_var(--color-border)]">
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <Th campo="fecha" {...th}>Fecha</Th>
                   <Th campo="cliente" {...th}>Cliente</Th>
@@ -502,7 +504,9 @@ function ListaInformes() {
               </tbody>
             </table>
           </div>
-          <Paginacion pagina={pagina} total={filtrados.length} onCambiar={(n) => setE((s) => ({ ...s, pagina: n }))} />
+          <div className="shrink-0">
+            <Paginacion pagina={pagina} total={filtrados.length} onCambiar={(n) => setE((s) => ({ ...s, pagina: n }))} />
+          </div>
         </div>
       )}
 

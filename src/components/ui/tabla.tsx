@@ -17,23 +17,45 @@ const DescripcionCtx = createContext<HTMLElement | null>(null)
  * (buscador y despues accion); en el celular la accion queda a la altura de
  * las pestanas y el buscador baja a su propia linea, a todo el ancho.
  */
-export function SeccionConTabs({ titulo, tabs, children }: { titulo: string; tabs: Tab[]; children: ReactNode }) {
+/**
+ * Alto de una vista cuya tabla tiene scroll propio: la pantalla menos la barra
+ * de arriba (3.5625rem) y el relleno de <main> en AppLayout (md: pt-8 + pb-10 =
+ * 4.5rem). Si se toca el relleno de <main>, hay que tocar esto tambien. Solo
+ * desde `md`: en el celular la pagina se desplaza normal (con KPIs y filtros
+ * apilados, una tabla con scroll propio quedaria de 3 filas).
+ */
+export const ALTO_VISTA = 'md:h-[calc(100dvh-3.5625rem-4.5rem)]'
+
+export function SeccionConTabs({
+  titulo,
+  tabs,
+  children,
+  ajustarAlto,
+}: {
+  titulo: string
+  tabs: Tab[]
+  children: ReactNode
+  /** La vista ocupa justo la pantalla: la pagina no se mueve y la tabla hace su propio scroll. */
+  ajustarAlto?: boolean
+}) {
   const [buscador, setBuscador] = useState<HTMLElement | null>(null)
   const [accion, setAccion] = useState<HTMLElement | null>(null)
   const [descripcion, setDescripcion] = useState<HTMLElement | null>(null)
   return (
     <BarraTabsCtx.Provider value={{ buscador, accion }}>
       <DescripcionCtx.Provider value={descripcion}>
-        <div className="mb-4">
-          <h1 className="text-lg font-semibold text-foreground">{titulo}</h1>
-          <p ref={setDescripcion} className="empty:hidden text-sm text-muted-foreground" />
+        <div className={cn(ajustarAlto && `md:flex md:flex-col md:overflow-y-auto ${ALTO_VISTA}`)}>
+          <div className="mb-4 shrink-0">
+            <h1 className="text-lg font-semibold text-foreground">{titulo}</h1>
+            <p ref={setDescripcion} className="empty:hidden text-sm text-muted-foreground" />
+          </div>
+          <div className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
+            <SubTabs tabs={tabs} className="mb-0" />
+            <div ref={setBuscador} className="order-last flex w-full items-center empty:hidden sm:order-none sm:ml-auto sm:w-auto" />
+            <div ref={setAccion} className="ml-auto flex items-center empty:hidden sm:ml-0" />
+          </div>
+          <div className={cn(ajustarAlto && 'md:flex md:min-h-0 md:flex-1 md:flex-col')}>{children}</div>
         </div>
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <SubTabs tabs={tabs} className="mb-0" />
-          <div ref={setBuscador} className="order-last flex w-full items-center empty:hidden sm:order-none sm:ml-auto sm:w-auto" />
-          <div ref={setAccion} className="ml-auto flex items-center empty:hidden sm:ml-0" />
-        </div>
-        {children}
       </DescripcionCtx.Provider>
     </BarraTabsCtx.Provider>
   )

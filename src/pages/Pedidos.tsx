@@ -13,7 +13,7 @@ import {
   X,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { toast } from 'sonner'
 import { PedidoCampos } from '@/components/pedidos/PedidoCampos'
 import { PedidoDetalleModal } from '@/components/pedidos/PedidoModales'
@@ -49,9 +49,11 @@ import { apiFetch, supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
 export default function Pedidos() {
+  const { pathname } = useLocation()
   return (
     <div>
       <SeccionConTabs
+        ajustarAlto={pathname.endsWith('/lista')}
         titulo="Pedidos"
         tabs={[
           { to: '/pedidos', label: 'Nuevo', end: true, icono: FilePlus2 },
@@ -558,7 +560,7 @@ function ListaPedidos() {
   const th = { orden: f.orden, onOrdenar: (orden: Orden<CampoOrden>) => cambiar({ orden }) }
 
   return (
-    <div>
+    <div className="md:flex md:min-h-0 md:flex-1 md:flex-col">
       <EnBarraDeTabs>
         <Buscador
           valor={f.busqueda}
@@ -570,7 +572,7 @@ function ListaPedidos() {
       </EnBarraDeTabs>
 
       {panel && (
-        <Card className="mb-4">
+        <Card className="mb-4 shrink-0">
           <CardBody className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MultiSelect label="Cliente" opciones={opciones.clientes} seleccion={f.clientes} onCambiar={(clientes) => cambiar({ clientes })} />
             <MultiSelect label="Marca" opciones={opciones.marcas} seleccion={f.marcas} onCambiar={(marcas) => cambiar({ marcas })} />
@@ -599,13 +601,13 @@ function ListaPedidos() {
         </Card>
       )}
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-3">
+      <div className="mb-4 grid shrink-0 gap-3 sm:grid-cols-3">
         <Kpi titulo="Pedidos (filtrados)" valor={formatMiles(filtrados.length)} />
         <Kpi titulo="Total pares" valor={formatMiles(totalPares)} />
         <Kpi titulo="Suma total precio" valor={formatGs(totalPrecio)} />
       </div>
       {duplicadosVisibles > 0 && (
-        <div className="mb-4">
+        <div className="mb-4 shrink-0">
           <Kpi tono="warning" titulo="N° de orden duplicados" valor={duplicadosVisibles} detalle="Estan marcados con ⚠ en la tabla." />
         </div>
       )}
@@ -617,10 +619,10 @@ function ListaPedidos() {
       ) : filtrados.length === 0 ? (
         <Vacio icono={ClipboardList} titulo={data.length === 0 ? 'Todavía no hay pedidos' : 'Sin resultados'} descripcion={data.length === 0 ? undefined : 'Proba con otros filtros.'} />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-card xl:overflow-clip">
-          <div className="overflow-x-auto xl:overflow-visible">
+        <div className="overflow-hidden rounded-lg border border-border bg-card md:flex md:min-h-0 md:flex-1 md:flex-col">
+          <div className="overflow-x-auto md:min-h-0 md:flex-1 md:overflow-auto">
             <table className="w-full text-sm">
-              <thead className="bg-card xl:sticky xl:top-14 xl:z-10 xl:shadow-[0_1px_0_0_var(--color-border)]">
+              <thead className="bg-card md:sticky md:top-0 md:z-10 md:shadow-[0_1px_0_0_var(--color-border)]">
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <Th campo="nro" {...th}>N° Orden</Th>
                   <Th campo="fecha" {...th} className="hidden sm:table-cell">Fecha carga</Th>
@@ -649,7 +651,9 @@ function ListaPedidos() {
               </tbody>
             </table>
           </div>
-          <Paginacion pagina={pagina} total={filtrados.length} onCambiar={(n) => setF((s) => ({ ...s, pagina: n }))} />
+          <div className="shrink-0">
+            <Paginacion pagina={pagina} total={filtrados.length} onCambiar={(n) => setF((s) => ({ ...s, pagina: n }))} />
+          </div>
         </div>
       )}
 

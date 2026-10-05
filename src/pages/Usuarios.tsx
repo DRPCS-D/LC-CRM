@@ -8,7 +8,7 @@ import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Card, CardBody } from '@/components/ui/card'
 import { ConfirmModal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
-import { AccionBuscador, Buscador } from '@/components/ui/tabla'
+import { ALTO_VISTA, AccionBuscador, Buscador } from '@/components/ui/tabla'
 import {
   EditarUsuarioModal,
   NuevoUsuarioModal,
@@ -18,6 +18,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useUsuarios } from '@/hooks/useUsuarios'
 import { ROLES, ROL_LABEL, type Usuario } from '@/lib/database.types'
 import { normalizar } from '@/lib/format'
+import { cn } from '@/lib/utils'
 
 /**
  * Las personas del sistema. Las ven admin y supervisor (la ruta esta detras
@@ -69,8 +70,8 @@ export default function Usuarios() {
   }
 
   return (
-    <div>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+    <div className={cn('md:flex md:flex-col', ALTO_VISTA)}>
+      <div className="mb-5 flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-lg font-semibold text-foreground">Usuarios</h1>
           <p className="text-sm text-muted-foreground">
@@ -97,7 +98,7 @@ export default function Usuarios() {
       {data.length > 0 && (
         <>
           {panel && (
-            <Card className="mb-4">
+            <Card className="mb-4 shrink-0">
               <CardBody className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <MultiSelect label="Rol" opciones={ROLES.map((r) => ROL_LABEL[r])} seleccion={roles} onCambiar={setRoles} />
                 <MultiSelect label="Estado" opciones={['Activo', 'Inactivo']} seleccion={estados} onCambiar={setEstados} />
@@ -121,9 +122,9 @@ export default function Usuarios() {
       ) : filtrados.length === 0 ? (
         <Vacio icono={UserRound} titulo="Sin resultados" descripcion="Probá con otra búsqueda." />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card xl:overflow-clip">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card md:min-h-0 md:flex-1 md:overflow-auto">
           <table className="w-full text-sm">
-            <thead className="bg-card xl:sticky xl:top-14 xl:z-10 xl:shadow-[0_1px_0_0_var(--color-border)]">
+            <thead className="bg-card md:sticky md:top-0 md:z-10 md:shadow-[0_1px_0_0_var(--color-border)]">
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
                 <th className="px-4 py-2.5 font-medium">Usuario</th>
                 <th className="hidden px-4 py-2.5 font-medium sm:table-cell">Nombre</th>

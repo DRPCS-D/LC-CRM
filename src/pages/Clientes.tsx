@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, ListFilter, MapPin, Pencil, Plus, Store, Trash2, Upload } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
-import { Link, Navigate, Route, Routes, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useLocation, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ClienteSelector } from '@/components/ClienteSelector'
 import { ImportarClientesModal } from '@/components/clientes/ImportarClientesModal'
@@ -31,9 +31,11 @@ const Mapa = lazy(() => import('@/components/Mapa'))
  * botones solo se esconden para no ofrecer lo que va a fallar).
  */
 export default function Clientes() {
+  const { pathname } = useLocation()
   return (
     <div>
       <SeccionConTabs
+        ajustarAlto={!pathname.includes('/mapa')}
         titulo="Clientes"
         tabs={[
           { to: '/clientes', label: 'Clientes', end: true },
@@ -96,7 +98,7 @@ function ListaClientes() {
   }
 
   return (
-    <div>
+    <div className="md:flex md:min-h-0 md:flex-1 md:flex-col">
       {!loading && !error && (
         <EnDescripcion>
           {filtrados.length === data.length
@@ -132,7 +134,7 @@ function ListaClientes() {
       )}
 
       {panel && (
-        <Card className="mb-4">
+        <Card className="mb-4 shrink-0">
           <CardBody className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MultiSelect label="Ciudad" opciones={opcionesDe(data, (c) => c.ciudad)} seleccion={ciudades} onCambiar={setCiudades} />
             <MultiSelect label="Zona" opciones={opcionesDe(data, (c) => c.zona)} seleccion={zonas} onCambiar={setZonas} />
@@ -168,9 +170,9 @@ function ListaClientes() {
       ) : filtrados.length === 0 ? (
         <Vacio icono={Store} titulo={data.length === 0 ? 'Todavía no hay clientes' : 'Sin resultados'} />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card xl:overflow-clip">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card md:min-h-0 md:flex-1 md:overflow-auto">
           <table className="w-full text-sm">
-            <thead className="bg-card xl:sticky xl:top-14 xl:z-10 xl:shadow-[0_1px_0_0_var(--color-border)]">
+            <thead className="bg-card md:sticky md:top-0 md:z-10 md:shadow-[0_1px_0_0_var(--color-border)]">
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
                 <th className="px-3 py-2.5 font-medium">Código</th>
                 <th className="px-3 py-2.5 font-medium">Razón social</th>
