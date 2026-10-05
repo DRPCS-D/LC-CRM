@@ -44,7 +44,8 @@ export function SeccionConTabs({
   return (
     <BarraTabsCtx.Provider value={{ buscador, accion }}>
         <div className={cn(ajustarAlto && `flex flex-col overflow-y-auto ${ALTO_VISTA}`)}>
-          <div className="mb-4 shrink-0">
+          {/* En escritorio el menu y las pestanas ya dicen donde se esta: el titulo solo se ve en el celular. */}
+          <div className="mb-4 shrink-0 md:hidden">
             <h1 className="text-lg font-semibold text-foreground">{titulo}</h1>
           </div>
           <div className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
