@@ -177,7 +177,11 @@
   object-fit: cover;
 }
 .mapa-avatar-varios {
-  background: #475569;
+  background: #8a1b1a;
+  box-shadow: 0 0 0 3px rgb(138 27 26 / 0.25), 0 1px 5px rgb(0 0 0 / 0.4);
+}
+.mapa-avatar-varios svg {
+  display: block;
 }
 .mapa-badge {
   position: absolute;
