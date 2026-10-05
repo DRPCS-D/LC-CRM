@@ -77,22 +77,26 @@ export default function Usuarios() {
             Quiénes tienen acceso al sistema y con qué rol.
           </p>
         </div>
-        {esAdmin && (
-          <Button onClick={() => setModalNuevo(true)}>
-            <Plus /> Nuevo usuario
-          </Button>
-        )}
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          {data.length > 0 && (
+            <Buscador
+              valor={busqueda}
+              onCambiar={setBusqueda}
+              placeholder="Buscar por usuario o nombre…"
+              className="min-w-0 flex-1 sm:w-80 sm:flex-none"
+              acciones={<AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((p) => !p)} insignia={nFiltros} activo={panel} />}
+            />
+          )}
+          {esAdmin && (
+            <Button onClick={() => setModalNuevo(true)}>
+              <Plus /> Nuevo
+            </Button>
+          )}
+        </div>
       </div>
 
       {data.length > 0 && (
         <>
-          <Buscador
-            valor={busqueda}
-            onCambiar={setBusqueda}
-            placeholder="Buscar por usuario o nombre…"
-            className="mb-4 w-full sm:w-80"
-            acciones={<AccionBuscador icono={ListFilter} titulo="Filtros" onClick={() => setPanel((p) => !p)} insignia={nFiltros} activo={panel} />}
-          />
           {panel && (
             <Card className="mb-4">
               <CardBody className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
