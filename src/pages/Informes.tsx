@@ -370,7 +370,7 @@ function valorOrden(i: Informe, c: CampoOrden): unknown {
 }
 
 function ListaInformes() {
-  const { data, loading, actualizando, error, refetch } = useInformes()
+  const { data, loading, error } = useInformes()
   const [e, setE] = useEstadoSesion<Estado>('informes.filtros', { ...FILTROS_VACIOS, orden: { campo: 'fecha', dir: 'desc' }, pagina: 1 })
   // Plegado/desplegado vive aparte de los filtros: los valores se recuerdan al
   // cambiar de pantalla (sessionStorage), pero el panel arranca siempre plegado.
@@ -419,11 +419,6 @@ function ListaInformes() {
             </>
           }
         />
-        <div className="ml-auto flex gap-2">
-          <Button variant="outline" size="icon" onClick={() => refetch()} disabled={actualizando} aria-label="Actualizar" title="Actualizar">
-            <RefreshCw className={cn(actualizando && 'animate-spin')} />
-          </Button>
-        </div>
       </div>
 
       {panel && <PanelFiltros data={data} f={e} onCambiar={cambiar} />}

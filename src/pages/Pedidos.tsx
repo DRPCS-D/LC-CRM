@@ -8,7 +8,6 @@ import {
   ImageUp,
   ListFilter,
   Loader2,
-  RefreshCw,
   RotateCcw,
   Sparkles,
   X,
@@ -479,7 +478,7 @@ function valorOrden(p: Pedido, campo: CampoOrden): unknown {
 
 function ListaPedidos() {
   const { veTodo } = useAuth()
-  const { data, loading, actualizando, error, refetch } = usePedidos()
+  const { data, loading, error } = usePedidos()
   const [f, setF] = useEstadoSesion<Filtros>('pedidos.filtros', FILTROS_INICIALES)
   // Plegado/desplegado vive aparte de los filtros: los valores se recuerdan al
   // cambiar de pantalla (sessionStorage), pero el panel arranca siempre plegado.
@@ -574,11 +573,6 @@ function ListaPedidos() {
             </>
           }
         />
-        <div className="ml-auto flex gap-2">
-          <Button variant="outline" size="icon" onClick={() => refetch()} disabled={actualizando} title="Actualizar" aria-label="Actualizar">
-            <RefreshCw className={cn(actualizando && 'animate-spin')} />
-          </Button>
-        </div>
       </div>
 
       {panel && (
