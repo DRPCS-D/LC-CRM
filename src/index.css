@@ -186,8 +186,11 @@
 .mapa-badge {
   position: absolute;
   top: -6px;
-  right: -8px;
+  /* Anclado por la izquierda: con 3 caracteres ("99+") crece hacia afuera y no tapa el icono. */
+  left: calc(100% - 12px);
   min-width: 20px;
+  box-sizing: border-box;
+  white-space: nowrap;
   padding: 1px 5px;
   border-radius: 9999px;
   background: #ef4444;
