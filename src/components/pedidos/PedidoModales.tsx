@@ -111,7 +111,7 @@ export function PedidoDetalleModal({
           </>
         }
       >
-        <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
           <button
             type="button"
             onClick={() => foto && setVisor(true)}
@@ -281,7 +281,7 @@ export function PedidoEditarModal({
         </>
       }
     >
-      <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <div>
           <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
             {fotoNueva || fotoActual ? (

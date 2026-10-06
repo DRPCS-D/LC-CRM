@@ -288,7 +288,7 @@ function NuevoPedido() {
   const esCola = cola.length > 1
 
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-2">
       <Card>
         <CardHeader title="Foto del pedido" />
         <CardBody>
