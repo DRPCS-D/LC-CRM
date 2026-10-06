@@ -46,7 +46,8 @@ export function SeccionConTabs({
   const [accion, setAccion] = useState<HTMLElement | null>(null)
   return (
     <BarraTabsCtx.Provider value={{ buscador, accion }}>
-        <div className={cn(ajustarAlto && `flex flex-col overflow-y-auto ${ALTO_VISTA}`)}>
+        {/* Con scroll propio el contenedor recorta lo que sobresale (el anillo de enfoque del buscador, pegado al borde): 4 px de aire alrededor, compensados con margen negativo para no mover nada. */}
+        <div className={cn(ajustarAlto && `-mx-1 -mt-1 flex flex-col overflow-y-auto px-1 pt-1 ${ALTO_VISTA}`)}>
           {/* En escritorio el menu y las pestanas ya dicen donde se esta: el titulo solo se ve en el celular. */}
           <div className={cn('shrink-0', tituloEnCelular ? 'mb-4 md:hidden' : 'sr-only')}>
             <h1 className="text-lg font-semibold text-foreground">{titulo}</h1>

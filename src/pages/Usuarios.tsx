@@ -137,7 +137,7 @@ export default function Usuarios() {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
           <div className="min-h-0 flex-1 overflow-auto">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 z-10 whitespace-nowrap bg-card shadow-[0_1px_0_0_var(--color-border)]">
+            <thead className="sticky top-0 z-10 whitespace-nowrap bg-muted shadow-[0_1px_0_0_var(--color-border)]">
               <tr className="border-b border-border text-left text-xs text-muted-foreground">
                 <Th campo="usuario" {...th} className="px-4">Usuario</Th>
                 <Th campo="nombre" {...th} className="px-4">Nombre</Th>

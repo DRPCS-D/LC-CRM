@@ -94,7 +94,12 @@ export function crearRecurso<T>(cargar: () => Promise<T[]>, mensajeError: string
     return { ...s, refetch }
   }
 
-  return { useRecurso, refetch, get: () => estado.data }
+  /** Cambia cada vez que la tabla se recarga. No pide nada: solo sirve para enterarse. */
+  function useVersion() {
+    return useSyncExternalStore(suscribir, () => estado.cargadoEn)
+  }
+
+  return { useRecurso, useVersion, refetch, get: () => estado.data }
 }
 
 /**

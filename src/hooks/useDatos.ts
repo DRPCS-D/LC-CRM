@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { Cliente, Informe, Pedido } from '@/lib/database.types'
 import { crearRecurso, traerTodo } from '@/lib/recurso'
 import { supabase } from '@/lib/supabase'
@@ -44,6 +45,37 @@ export const informes = crearRecurso<Informe>(
     ),
   'No se pudieron cargar los informes.',
 )
+
+/**
+ * Los pedidos de UN cliente, pedidos a la base solo cuando se abre su detalle: asi
+ * entrar a Clientes no obliga a bajar todos los pedidos. La RLS decide cuales llegan
+ * (un vendedor recibe solo los suyos). Se vuelve a pedir cuando la tabla de pedidos
+ * se recarga (por ejemplo, tras editar o borrar uno desde este mismo detalle).
+ */
+export function usePedidosDeCliente(clienteId: string | null) {
+  const version = pedidos.useVersion()
+  const [estado, setEstado] = useState<{ clienteId: string | null; data: Pedido[] }>({ clienteId: null, data: [] })
+
+  useEffect(() => {
+    if (!clienteId) return
+    let vigente = true
+    supabase
+      .from('pedidos')
+      .select(`*, ${USUARIO_EMBEBIDO}`)
+      .eq('cliente_id', clienteId)
+      .order('created_at', { ascending: false })
+      .order('id')
+      .then(({ data }) => {
+        if (vigente) setEstado({ clienteId, data: (data ?? []) as unknown as Pedido[] })
+      })
+    return () => {
+      vigente = false
+    }
+  }, [clienteId, version])
+
+  const listo = clienteId !== null && estado.clienteId === clienteId
+  return { data: listo ? estado.data : [], cargando: clienteId !== null && !listo }
+}
 
 export const useClientes = clientes.useRecurso
 export const usePedidos = pedidos.useRecurso

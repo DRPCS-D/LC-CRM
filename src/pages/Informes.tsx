@@ -1,15 +1,20 @@
 import {
+  ChevronsLeft,
+  ChevronsRight,
   CircleCheck,
   FileSpreadsheet,
   FilePlus2,
   FileText,
+  Flame,
   ListFilter,
   Loader2,
   LocateFixed,
   MapIcon,
+  MapPin,
   MapPinned,
   Pencil,
   RefreshCw,
+  Route as RutaIcono,
   Trash2,
 } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
@@ -21,7 +26,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardBody } from '@/components/ui/card'
 import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
-import { Field, Input, Textarea } from '@/components/ui/field'
+import { Field, Input, Select, Textarea } from '@/components/ui/field'
 import { ConfirmModal, Modal } from '@/components/ui/modal'
 import { MultiSelect } from '@/components/ui/multiselect'
 import { AccionBuscador, Buscador, EnBarraDeTabs, ContadorLista, FinDeLista, SeccionConTabs, Th, useCargaProgresiva } from '@/components/ui/tabla'
@@ -31,9 +36,10 @@ import { useEstadoSesion } from '@/hooks/useEstadoSesion'
 import { clientes as recursoClientes, informes as recursoInformes, mensajeDeError, useClientes, useInformes } from '@/hooks/useDatos'
 import { autorDe, type Cliente, type Informe } from '@/lib/database.types'
 import { descargarCSV } from '@/lib/exportar'
-import { diaLocal, formatFecha, formatFechaHora, haceDias, hoyLocal, marcaDeTiempo, normalizar } from '@/lib/format'
+import { diaLocal, formatFecha, formatFechaHora, formatHora, haceDias, hoyLocal, marcaDeTiempo, normalizar } from '@/lib/format'
 import { escaparHtml } from '@/lib/html'
 import { opcionesDe, ordenar, type Orden } from '@/lib/orden'
+import { diaConVisitas, largoRutaKm } from '@/lib/ruta'
 import { supabase } from '@/lib/supabase'
 import { urlAvatar } from '@/lib/usuario'
 import { cn } from '@/lib/utils'
@@ -510,7 +516,7 @@ function ListaInformes() {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
           <div className="min-h-0 flex-1 overflow-auto">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 z-10 whitespace-nowrap bg-card shadow-[0_1px_0_0_var(--color-border)]">
+              <thead className="sticky top-0 z-10 whitespace-nowrap bg-muted shadow-[0_1px_0_0_var(--color-border)]">
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <Th campo="fecha" {...th}>Fecha</Th>
                   <Th campo="cliente" {...th}>Cliente</Th>
@@ -694,6 +700,9 @@ function MapaInformes() {
   // nada) y recuerda lo ultimo que se eligio mientras dure la sesion.
   const [f, setF] = useEstadoSesion<FiltrosInforme>('informes.mapa', { ...FILTROS_VACIOS, desde: diaLocal(haceDias(7)) })
   const [panel, setPanel] = useState(false)
+  // El mapa de calor es solo para admin y supervisor.
+  const { veTodo } = useAuth()
+  const [vista, setVista] = useState<'puntos' | 'calor' | 'ruta'>('puntos')
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const enfocar = params.get('informe')
@@ -712,39 +721,105 @@ function MapaInformes() {
     if (enfocar) navigate('/informes/mapa', { replace: true })
   }
 
-  const puntos = useMemo<PuntoMapa[]>(
-    () =>
-      filtrados.map((i) => {
-        const autor = autorDe(i)
-        return {
-          id: i.id,
-          lat: i.lat,
-          lng: i.lng,
-          avatar: { clave: i.usuario_id ?? autor, inicial: autor.charAt(0), url: urlAvatar(i.usuario?.foto_path) },
-          popup: `<strong>${escaparHtml(i.cliente_nombre)}</strong><br/><span style="color:#64748b">${escaparHtml(formatFechaHora(i.created_at))} · ${escaparHtml(autor)}</span>${i.comentario ? `<br/>${escaparHtml(i.comentario)}` : ''}`,
-        }
-      }),
-    [filtrados],
+  // Recorrido: las visitas de UN vendedor en UN dia, en orden de hora, unidas por una linea.
+  const enRuta = veTodo && vista === 'ruta'
+  const [vendedor, setVendedor] = useState('')
+  const [dia, setDia] = useState(hoyLocal())
+  const vendedores = useMemo(() => opcionesDe(data, (i) => autorDe(i)), [data])
+  // Dias en que ese vendedor tiene visitas: para saltar de un dia con visitas al siguiente.
+  const diasConVisitas = useMemo(
+    () => (enRuta && vendedor ? data.filter((i) => autorDe(i) === vendedor).map((i) => diaLocal(i.created_at)) : []),
+    [data, enRuta, vendedor],
   )
+  const diaAnteriorConVisitas = diaConVisitas(diasConVisitas, dia, -1)
+  const diaSiguienteConVisitas = diaConVisitas(diasConVisitas, dia, 1)
+  const recorrido = useMemo(
+    () =>
+      enRuta && vendedor
+        ? data.filter((i) => autorDe(i) === vendedor && diaLocal(i.created_at) === dia).sort((x, y) => x.created_at.localeCompare(y.created_at))
+        : [],
+    [data, enRuta, vendedor, dia],
+  )
+
+  const puntos = useMemo<PuntoMapa[]>(() => {
+    if (enRuta) {
+      return recorrido.map((i, n) => ({
+        id: i.id,
+        lat: i.lat,
+        lng: i.lng,
+        numero: n + 1,
+        popup: `<strong>${n + 1}. ${escaparHtml(i.cliente_nombre ?? 'Sin cliente')}</strong><br/><span style="color:#64748b">${escaparHtml(formatHora(i.created_at))}</span>${i.comentario ? `<br/>${escaparHtml(i.comentario)}` : ''}`,
+      }))
+    }
+    return filtrados.map((i) => {
+      const autor = autorDe(i)
+      return {
+        id: i.id,
+        lat: i.lat,
+        lng: i.lng,
+        avatar: { clave: i.usuario_id ?? autor, inicial: autor.charAt(0), url: urlAvatar(i.usuario?.foto_path) },
+        popup: `<strong>${escaparHtml(i.cliente_nombre)}</strong><br/><span style="color:#64748b">${escaparHtml(formatFechaHora(i.created_at))} · ${escaparHtml(autor)}</span>${i.comentario ? `<br/>${escaparHtml(i.comentario)}` : ''}`,
+      }
+    })
+  }, [filtrados, enRuta, recorrido])
 
   if (loading) return <Cargando />
   if (error) return <ErrorBox mensaje={error} />
 
   return (
     <div>
+      {/* Puntos / Calor / Recorrido van en la fila de las pestanas, a la derecha (solo admin y supervisor). */}
+      {veTodo && (
+        <EnBarraDeTabs>
+          <div className="flex gap-1 rounded-lg border border-border bg-card p-1 shadow-xs">
+            {([['puntos', 'Puntos', MapPin], ['calor', 'Calor', Flame], ['ruta', 'Recorrido', RutaIcono]] as const).map(([k, label, Icono]) => (
+              <Button key={k} size="sm" variant={vista === k ? 'primary' : 'ghost'} aria-pressed={vista === k} onClick={() => setVista(k)}>
+                <Icono /> {label}
+              </Button>
+            ))}
+          </div>
+        </EnBarraDeTabs>
+      )}
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <BotonesRango f={f} onCambiar={cambiarFiltros} />
+        {enRuta ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Select className="w-auto" value={vendedor} onChange={(e) => setVendedor(e.target.value)} aria-label="Vendedor">
+              <option value="">Elegí un vendedor…</option>
+              {vendedores.map((v) => <option key={v} value={v}>{v}</option>)}
+            </Select>
+            {/* Un clic para saltar al dia anterior o siguiente CON visitas del vendedor, sin abrir el calendario. */}
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="icon" onClick={() => diaAnteriorConVisitas && setDia(diaAnteriorConVisitas)} disabled={!diaAnteriorConVisitas} aria-label="Día anterior con visitas" title="Día anterior con visitas">
+                <ChevronsLeft />
+              </Button>
+              <Input className="w-auto" type="date" value={dia} max={hoyLocal()} onChange={(e) => e.target.value && setDia(e.target.value)} aria-label="Día" />
+              <Button variant="outline" size="icon" onClick={() => diaSiguienteConVisitas && setDia(diaSiguienteConVisitas)} disabled={!diaSiguienteConVisitas} aria-label="Día siguiente con visitas" title="Día siguiente con visitas">
+                <ChevronsRight />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <BotonesRango f={f} onCambiar={cambiarFiltros} />
+        )}
         <div className="ml-auto">
-          <BotonFiltros f={f} abierto={panel} onAlternar={() => setPanel((a) => !a)} />
+          {!enRuta && <BotonFiltros f={f} abierto={panel} onAlternar={() => setPanel((a) => !a)} />}
         </div>
       </div>
-      {panel && <PanelFiltros data={data} f={f} onCambiar={cambiarFiltros} />}
+      {panel && !enRuta && <PanelFiltros data={data} f={f} onCambiar={cambiarFiltros} />}
       <div className="mb-3 flex items-center justify-between gap-3">
-        <span className="text-sm text-muted-foreground">{filtrados.length} visitas en el mapa</span>
+        <span className="text-sm text-muted-foreground">
+          {enRuta
+            ? !vendedor
+              ? 'Elegí un vendedor y un día para ver su recorrido.'
+              : recorrido.length === 0
+                ? `${vendedor} no tiene visitas el ${formatFecha(dia)}.`
+                : `${recorrido.length} ${recorrido.length === 1 ? 'visita' : 'visitas'} de ${vendedor} · ${formatHora(recorrido[0].created_at)} a ${formatHora(recorrido[recorrido.length - 1].created_at)} · ${largoRutaKm(recorrido).toLocaleString('es-PY', { maximumFractionDigits: 1 })} km en línea recta`
+            : `${filtrados.length} visitas en el mapa${veTodo && vista === 'calor' ? ' · más rojo, más visitas' : ''}`}
+        </span>
         {enfocar && <Button variant="ghost" size="sm" onClick={() => navigate('/informes/mapa', { replace: true })}>Quitar enfoque</Button>}
       </div>
       <Suspense fallback={<Cargando texto="Cargando mapa…" />}>
-        <Mapa puntos={puntos} enfocar={enfocar} />
+        <Mapa puntos={puntos} enfocar={enfocar} modo={veTodo ? vista : 'puntos'} />
       </Suspense>
     </div>
   )

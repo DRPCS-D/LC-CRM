@@ -1,5 +1,6 @@
 import L from 'leaflet'
 import 'leaflet.markercluster'
+import 'leaflet.heat'
 import 'leaflet/dist/leaflet.css'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import { useEffect, useRef } from 'react'
@@ -26,6 +27,10 @@ export interface PuntoMapa {
    * que un cluster de visitas de una sola persona muestre su cara.
    */
   avatar?: { clave: string; inicial: string; url: string | null }
+  /** 'alerta': pin en otro color (por ejemplo, clientes sin visitar). */
+  tono?: 'alerta'
+  /** Orden de la visita (mapa de recorrido): se dibuja el numero dentro del marcador. */
+  numero?: number
 }
 
 // Icono "usuarios" (lucide) para un grupo de visitas de varias personas.
@@ -45,7 +50,7 @@ function iconoPunto(p: PuntoMapa): L.DivIcon {
   if (p.avatar) {
     return L.divIcon({ html: htmlAvatar(p.avatar), className: '', iconSize: [36, 36], iconAnchor: [18, 18], popupAnchor: [0, -16] })
   }
-  return L.divIcon({ html: '<div class="mapa-pin"></div>', className: '', iconSize: [26, 26], iconAnchor: [13, 26], popupAnchor: [0, -24] })
+  return L.divIcon({ html: `<div class="mapa-pin${p.tono === 'alerta' ? ' mapa-pin-alerta' : ''}"></div>`, className: '', iconSize: [26, 26], iconAnchor: [13, 26], popupAnchor: [0, -24] })
 }
 
 function iconoCluster(cluster: L.MarkerCluster): L.DivIcon {
@@ -62,7 +67,7 @@ function iconoCluster(cluster: L.MarkerCluster): L.DivIcon {
     return L.divIcon({ html, className: '', iconSize: [40, 40], iconAnchor: [20, 20] })
   }
   return L.divIcon({
-    html: `<div class="mapa-cluster"><span>${n}</span></div>`,
+    html: `<div class="mapa-cluster${hijos.every((m) => (m.options as { punto?: PuntoMapa }).punto?.tono === 'alerta') ? ' mapa-cluster-alerta' : ''}"><span>${n}</span></div>`,
     className: '',
     iconSize: [38, 38],
     iconAnchor: [19, 19],
@@ -73,8 +78,11 @@ export default function Mapa({
   puntos,
   enfocar,
   className,
+  modo = 'puntos',
 }: {
   puntos: PuntoMapa[]
+  /** 'calor': mapa de calor (donde hay mas puntos). 'ruta': une los puntos en el orden dado y los numera. */
+  modo?: 'puntos' | 'calor' | 'ruta'
   /** id de un punto para centrar el mapa en el y abrir su popup. */
   enfocar?: string | null
   className?: string
@@ -82,6 +90,8 @@ export default function Mapa({
   const contenedor = useRef<HTMLDivElement>(null)
   const mapa = useRef<L.Map | null>(null)
   const capa = useRef<L.MarkerClusterGroup | null>(null)
+  const calor = useRef<L.HeatLayer | null>(null)
+  const ruta = useRef<L.LayerGroup | null>(null)
   const marcadores = useRef(new Map<string, L.Marker>())
   const claveAnterior = useRef('')
   const enfocado = useRef<string | null>(null)
@@ -101,6 +111,17 @@ export default function Mapa({
     // Sin el prefijo "Leaflet"; la atribucion a OpenStreetMap se mantiene (lo exige su licencia).
     L.control.attribution({ prefix: false }).addTo(m)
     m.addLayer(cluster)
+    // El mapa de calor se prepara aca y se enciende o apaga segun `modo` (ver mas abajo).
+    calor.current = L.heatLayer([], {
+      radius: 18,
+      blur: 18,
+      // Por debajo de este zoom cada punto pesa menos: con el pais entero a la vista
+      // no se satura todo de rojo.
+      maxZoom: 12,
+      minOpacity: 0.3,
+      gradient: { 0.25: '#fde68a', 0.55: '#f97316', 1: '#8a1b1a' },
+    })
+    ruta.current = L.layerGroup()
     mapa.current = m
     capa.current = cluster
     // El contenedor puede terminar de dimensionarse despues del primer pintado
@@ -112,6 +133,8 @@ export default function Mapa({
       m.remove()
       mapa.current = null
       capa.current = null
+      calor.current = null
+      ruta.current = null
       marcadores.current.clear()
       claveAnterior.current = ''
       enfocado.current = null
@@ -132,6 +155,38 @@ export default function Mapa({
     })
     cluster.addLayers(nuevos)
   }, [puntos])
+
+  // Marcadores agrupados, mapa de calor o recorrido: se enciende uno y se apagan los otros.
+  useEffect(() => {
+    const m = mapa.current
+    const cluster = capa.current
+    const heat = calor.current
+    const recorrido = ruta.current
+    if (!m || !cluster || !heat || !recorrido) return
+    const poner = (capaX: L.Layer, si: boolean) => {
+      if (si && !m.hasLayer(capaX)) m.addLayer(capaX)
+      if (!si && m.hasLayer(capaX)) m.removeLayer(capaX)
+    }
+    recorrido.clearLayers()
+    if (modo === 'ruta') {
+      if (puntos.length > 1) {
+        L.polyline(puntos.map((p) => [p.lat, p.lng] as L.LatLngTuple), { color: '#8a1b1a', weight: 3, opacity: 0.7, dashArray: '6 6' }).addTo(recorrido)
+      }
+      for (const p of puntos) {
+        L.marker([p.lat, p.lng], {
+          icon: L.divIcon({ html: `<div class="mapa-numero">${p.numero ?? ''}</div>`, className: '', iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -14] }),
+        })
+          .bindPopup(p.popup, { maxWidth: 280 })
+          .addTo(recorrido)
+      }
+    }
+    poner(cluster, modo === 'puntos')
+    poner(heat, modo === 'calor')
+    // Los puntos del calor se cargan DESPUES de ponerlo en el mapa: leaflet.heat se rompe si
+    // se le actualizan estando fuera (al cambiar rapido entre Puntos y Calor daba error).
+    if (modo === 'calor') heat.setLatLngs(puntos.map((p) => [p.lat, p.lng, 1] as L.HeatLatLngTuple))
+    poner(recorrido, modo === 'ruta')
+  }, [puntos, modo])
 
   // Donde mira el mapa. Va todo en un solo efecto (y sin animaciones) porque
   // encuadrar y acercar a un punto por separado se pisaban entre si:

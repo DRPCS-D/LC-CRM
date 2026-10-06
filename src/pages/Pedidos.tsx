@@ -620,9 +620,14 @@ function ListaPedidos() {
         </Card>
       )}
 
+      {/* Celular: pedidos y pares como una linea de texto (ahorra alto); desde `sm`, como tarjetas. */}
+      <p className="mb-3 shrink-0 text-sm text-muted-foreground sm:hidden">
+        <span className="font-medium text-foreground">{formatMiles(filtrados.length)}</span> {filtrados.length === 1 ? 'pedido' : 'pedidos'} ·{' '}
+        <span className="font-medium text-foreground">{formatMiles(totalPares)}</span> pares
+      </p>
       <div className="mb-4 grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-3">
-        <Kpi titulo="Pedidos (filtrados)" valor={formatMiles(filtrados.length)} />
-        <Kpi titulo="Total pares" valor={formatMiles(totalPares)} />
+        <Kpi titulo="Pedidos (filtrados)" valor={formatMiles(filtrados.length)} className="hidden sm:block" />
+        <Kpi titulo="Total pares" valor={formatMiles(totalPares)} className="hidden sm:block" />
         <Kpi titulo="Suma total precio" valor={formatGs(totalPrecio)} className="col-span-2 sm:col-span-1" />
       </div>
       {duplicadosVisibles > 0 && (
@@ -641,7 +646,7 @@ function ListaPedidos() {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
           <div className="min-h-0 flex-1 overflow-auto">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 z-10 whitespace-nowrap bg-card shadow-[0_1px_0_0_var(--color-border)]">
+              <thead className="sticky top-0 z-10 whitespace-nowrap bg-muted shadow-[0_1px_0_0_var(--color-border)]">
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <Th campo="nro" {...th}>N° Orden</Th>
                   <Th campo="fecha" {...th}>Fecha carga</Th>

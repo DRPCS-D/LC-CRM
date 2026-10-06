@@ -43,7 +43,8 @@
 :root {
   --radius: 0.5rem;
 
-  --background: oklch(0.985 0.002 250);
+  /* Fondo grisaceo y tarjetas blancas encima: asi se distinguen KPIs, tablas y buscadores. */
+  --background: oklch(0.93 0.007 250);
   --foreground: oklch(0.21 0.02 255);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.21 0.02 255);
@@ -66,8 +67,8 @@
   --warning: oklch(0.68 0.15 70);
   --warning-foreground: oklch(0.2 0.03 70);
 
-  --border: oklch(0.9 0.006 255);
-  --input: oklch(0.9 0.006 255);
+  --border: oklch(0.86 0.008 255);
+  --input: oklch(0.86 0.008 255);
   --ring: oklch(0.42 0.14 25);
 
   color-scheme: light;
@@ -155,6 +156,23 @@
   transform: rotate(-45deg);
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
 }
+.mapa-pin-alerta {
+  background: #d97706;
+}
+.mapa-numero {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #8a1b1a;
+  color: #fff;
+  border: 2.5px solid #fff;
+  box-shadow: 0 1px 5px rgb(0 0 0 / 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
 .mapa-avatar {
   position: relative;
   width: 100%;
@@ -208,6 +226,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.mapa-cluster-alerta {
+  background: rgb(217 119 6 / 0.25);
+}
+.mapa-cluster.mapa-cluster-alerta span {
+  background: #d97706;
 }
 .mapa-cluster span {
   width: 28px;

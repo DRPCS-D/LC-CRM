@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/field'
+import type { ReactNode } from 'react'
 import type { Cliente } from '@/lib/database.types'
 import { normalizar } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -31,12 +32,17 @@ export function ClienteSelector({
   onCambiar,
   invalido,
   autoFocus,
+  acciones,
+  placeholder = 'Buscar por código, razón social o fantasía…',
 }: {
   clientes: Cliente[]
   valor: Cliente | null
   onCambiar: (c: Cliente | null) => void
   invalido?: boolean
   autoFocus?: boolean
+  /** Botones (<AccionBuscador>) que van dentro del cuadro, a la derecha, como en <Buscador>. */
+  acciones?: ReactNode
+  placeholder?: string
 }) {
   const [texto, setTexto] = useState('')
   const [abierto, setAbierto] = useState(false)
@@ -79,6 +85,7 @@ export function ClienteSelector({
         >
           <X /> Cambiar
         </Button>
+        {acciones}
       </div>
     )
   }
@@ -89,8 +96,8 @@ export function ClienteSelector({
         ref={inputRef}
         value={texto}
         autoFocus={autoFocus}
-        placeholder="Buscar por código, razón social o fantasía…"
-        className={cn(invalido && 'border-destructive ring-1 ring-destructive')}
+        placeholder={placeholder}
+        className={cn(acciones && 'pr-12', invalido && 'border-destructive ring-1 ring-destructive')}
         onChange={(e) => {
           setTexto(e.target.value)
           setAbierto(true)
@@ -114,6 +121,7 @@ export function ClienteSelector({
           }
         }}
       />
+      {acciones && <div className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center gap-0.5">{acciones}</div>}
       {abierto && texto && (
         <div className="absolute inset-x-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-md border border-border bg-card py-1 shadow-lg">
           {sugerencias.length === 0 ? (

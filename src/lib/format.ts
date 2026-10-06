@@ -61,6 +61,15 @@ export function formatFechaHora(iso: string | null | undefined): string {
   return `${d}/${m}/${a} ${h}:${min}`
 }
 
+/** Solo la hora de un timestamp, en Asuncion: '08:05'. */
+export function formatHora(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  const f = new Date(iso)
+  if (Number.isNaN(f.getTime())) return '—'
+  const { h, min } = partes(f)
+  return `${h}:${min}`
+}
+
 /** Dia (aaaa-mm-dd) de un timestamp en Asuncion: para comparar con un <input type="date">. */
 export function diaLocal(iso: string | Date): string {
   const f = typeof iso === 'string' ? new Date(iso) : iso
