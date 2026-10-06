@@ -33,6 +33,7 @@ import { autorDe, TIPOS_PEDIDO, type Cliente, type Pedido } from '@/lib/database
 import { descargarCSV } from '@/lib/exportar'
 import {
   diaLocal,
+  formatFecha,
   formatFechaHora,
   formatGs,
   formatMiles,
@@ -648,7 +649,6 @@ function ListaPedidos() {
                   <Th campo="ciudad" {...th}>Ciudad</Th>
                   <Th campo="zona" {...th}>Zona</Th>
                   <Th campo="marca" {...th}>Marca</Th>
-                  <Th campo="pares" {...th} className="text-right">Pares</Th>
                   <Th campo="usuario" {...th}>Usuario</Th>
                   <Th campo="total" {...th} className="text-right">Total</Th>
                 </tr>
@@ -660,12 +660,11 @@ function ListaPedidos() {
                       {p.nro_orden_norm && repetidos.has(p.nro_orden_norm) && <AlertTriangle className="mr-1 inline size-3.5 text-warning" aria-label="N° de orden repetido" />}
                       {p.nro_orden}
                     </td>
-                    <td className="tabular whitespace-nowrap px-3 py-2.5 text-muted-foreground">{formatFechaHora(p.created_at)}</td>
+                    <td className="tabular whitespace-nowrap px-3 py-2.5 text-muted-foreground">{formatFecha(p.created_at)}</td>
                     <td className="max-w-[16rem] truncate whitespace-nowrap px-3 py-2.5" title={p.cliente_nombre ?? undefined}>{p.cliente_nombre}</td>
                     <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={p.ciudad ?? undefined}>{p.ciudad}</td>
                     <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={p.zona ?? undefined}>{p.zona}</td>
                     <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={p.marca ?? undefined}>{p.marca}</td>
-                    <td className="tabular whitespace-nowrap px-3 py-2.5 text-right text-muted-foreground">{formatMiles(p.total_pares)}</td>
                     <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground">{autorDe(p)}</td>
                     <td className="tabular whitespace-nowrap px-3 py-2.5 text-right">{formatGs(p.total_precio)}</td>
                   </tr>

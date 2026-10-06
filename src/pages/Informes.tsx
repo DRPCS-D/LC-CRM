@@ -31,7 +31,7 @@ import { useEstadoSesion } from '@/hooks/useEstadoSesion'
 import { clientes as recursoClientes, informes as recursoInformes, mensajeDeError, useClientes, useInformes } from '@/hooks/useDatos'
 import { autorDe, type Cliente, type Informe } from '@/lib/database.types'
 import { descargarCSV } from '@/lib/exportar'
-import { diaLocal, formatFechaHora, haceDias, hoyLocal, marcaDeTiempo, normalizar } from '@/lib/format'
+import { diaLocal, formatFecha, formatFechaHora, haceDias, hoyLocal, marcaDeTiempo, normalizar } from '@/lib/format'
 import { escaparHtml } from '@/lib/html'
 import { opcionesDe, ordenar, type Orden } from '@/lib/orden'
 import { supabase } from '@/lib/supabase'
@@ -523,7 +523,7 @@ function ListaInformes() {
               <tbody>
                 {visibles.map((i) => (
                   <tr key={i.id} onClick={() => setAbierto(i)} className="cursor-pointer border-b border-border last:border-0 hover:bg-accent/40">
-                    <td className="tabular whitespace-nowrap px-3 py-2.5 text-muted-foreground">{formatFechaHora(i.created_at)}</td>
+                    <td className="tabular whitespace-nowrap px-3 py-2.5 text-muted-foreground">{formatFecha(i.created_at)}</td>
                     <td className="max-w-[14rem] truncate whitespace-nowrap px-3 py-2.5 font-medium" title={i.cliente_nombre ?? undefined}>{i.cliente_nombre}</td>
                     <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={i.ciudad ?? undefined}>{i.ciudad}</td>
                     <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={i.zona ?? undefined}>{i.zona}</td>
