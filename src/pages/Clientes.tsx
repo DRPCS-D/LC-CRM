@@ -334,13 +334,17 @@ function ClienteDetalleModal({
             <Dato label="Zona">{cliente.zona}</Dato>
           </div>
 
-          {tieneUbicacion && (
+          {tieneUbicacion ? (
             <Link
               to={`/clientes/mapa?cliente=${cliente.id}`}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
             >
               <MapPin className="size-4" /> Ver en el mapa
             </Link>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+              <MapPin className="size-4" /> Sin ubicación registrada
+            </span>
           )}
 
           {/* El cobrador no ve pedidos: sin totales ni lista. */}
