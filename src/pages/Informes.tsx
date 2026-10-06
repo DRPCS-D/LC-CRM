@@ -705,6 +705,13 @@ function MapaInformes() {
 
   const filtrados = useMemo(() => filtrarInformes(data, f), [data, f])
 
+  // Tocar cualquier filtro (incluso "Todo", que puede dejarlos igual) suelta el
+  // informe enfocado: si no, el mapa se queda acercado a ese punto.
+  const cambiarFiltros = (p: Partial<FiltrosInforme>) => {
+    setF((s) => ({ ...s, ...p }))
+    if (enfocar) navigate('/informes/mapa', { replace: true })
+  }
+
   const puntos = useMemo<PuntoMapa[]>(
     () =>
       filtrados.map((i) => {
@@ -726,12 +733,12 @@ function MapaInformes() {
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <BotonesRango f={f} onCambiar={(p) => setF((s) => ({ ...s, ...p }))} />
+        <BotonesRango f={f} onCambiar={cambiarFiltros} />
         <div className="ml-auto">
           <BotonFiltros f={f} abierto={panel} onAlternar={() => setPanel((a) => !a)} />
         </div>
       </div>
-      {panel && <PanelFiltros data={data} f={f} onCambiar={(p) => setF((s) => ({ ...s, ...p }))} />}
+      {panel && <PanelFiltros data={data} f={f} onCambiar={cambiarFiltros} />}
       <div className="mb-3 flex items-center justify-between gap-3">
         <span className="text-sm text-muted-foreground">{filtrados.length} visitas en el mapa</span>
         {enfocar && <Button variant="ghost" size="sm" onClick={() => navigate('/informes/mapa', { replace: true })}>Quitar enfoque</Button>}

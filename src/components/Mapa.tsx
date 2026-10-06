@@ -93,7 +93,13 @@ export default function Mapa({
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap',
     }).addTo(m)
-    const cluster = L.markerClusterGroup({ iconCreateFunction: iconoCluster, showCoverageOnHover: false })
+    const cluster = L.markerClusterGroup({
+      iconCreateFunction: iconoCluster,
+      showCoverageOnHover: false,
+      // Sin la animacion de agrupar/desagrupar: si el mapa se mueve o se rearma mientras
+      // corre, el plugin se rompe (el mapa queda sin puntos o con la pantalla de error).
+      animate: false,
+    })
     // Sin el prefijo "Leaflet"; la atribucion a OpenStreetMap se mantiene (lo exige su licencia).
     L.control.attribution({ prefix: false }).addTo(m)
     m.addLayer(cluster)
@@ -151,8 +157,23 @@ export default function Mapa({
     if (enfocar && marker && enfocado.current !== enfocar) {
       enfocado.current = enfocar
       m.setView(marker.getLatLng(), 17, { animate: false })
-      // Si sigue agrupado con otros en el mismo lugar, el cluster lo despliega.
-      cluster.zoomToShowLayer(marker, () => marker.openPopup())
+      // No se usa `zoomToShowLayer`: deja avisos pendientes que, tras rearmar las
+      // capas, se disparan sobre marcadores ya borrados y rompen el mapa.
+      // El plugin dibuja los marcadores al terminar el movimiento: se espera un instante.
+      // Se busca el marcador de nuevo porque las capas pueden haberse rearmado mientras
+      // tanto (por ejemplo, al reiniciarse los filtros al llegar desde la lista).
+      setTimeout(() => {
+        const actual = marcadores.current.get(enfocar)
+        if (!actual || !capa.current) return
+        const visible = capa.current.getVisibleParent(actual)
+        if (visible === actual) {
+          actual.openPopup()
+        } else if (visible) {
+          // Sigue agrupado con otros en el mismo lugar: se despliega el grupo y se abre.
+          capa.current.once('spiderfied', () => actual.openPopup())
+          ;(visible as L.MarkerCluster).spiderfy()
+        }
+      }, 80)
     } else if (!enfocar && enfocado.current) {
       enfocado.current = null
       encuadrarTodo()
