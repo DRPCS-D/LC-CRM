@@ -1,7 +1,6 @@
 import { BarChart3, FileText, Map, MapPin, User, Users } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { Link } from 'react-router-dom'
-import { Kpi } from '@/components/ui/tabla'
 import { useAuth } from '@/hooks/useAuth'
 import { useInformes, usePedidos } from '@/hooks/useDatos'
 import { diaLocal, formatGs, formatMiles, hoyLocal } from '@/lib/format'
@@ -33,36 +32,26 @@ const MODULOS: Modulo[] = [
 ]
 
 /**
- * Los numeros de hoy. Cada quien ve los suyos (la RLS ya filtra); admin y
- * supervisor ven los de todo el equipo. Usa las mismas tablas en memoria que
- * las listas, asi que al entrar a Pedidos o Informes ya estan cargadas.
+ * Una linea con lo de hoy, bajo el saludo. Cada quien ve lo suyo (la RLS ya
+ * filtra); admin y supervisor, lo de todo el equipo. Usa las tablas en memoria
+ * de las listas, asi que casi nunca espera una descarga propia.
  */
 function ResumenHoy({ conPedidos, equipo }: { conPedidos: boolean; equipo: boolean }) {
   const hoy = hoyLocal()
   const { data: informes } = useInformes()
-  const visitasHoy = informes.filter((i) => diaLocal(i.created_at) === hoy).length
-  return (
-    <section className="mb-6">
-      <h2 className="mb-2 text-xs font-medium text-muted-foreground">{equipo ? 'Hoy · todo el equipo' : 'Hoy'}</h2>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {conPedidos && <PedidosHoy hoy={hoy} />}
-        <Kpi titulo="Visitas" valor={formatMiles(visitasHoy)} className="col-span-2 lg:col-span-1" />
-      </div>
-    </section>
-  )
-}
-
-function PedidosHoy({ hoy }: { hoy: string }) {
   const { data: pedidos } = usePedidos()
+  const visitas = informes.filter((i) => diaLocal(i.created_at) === hoy).length
   const deHoy = pedidos.filter((p) => diaLocal(p.created_at) === hoy)
-  const pares = deHoy.reduce((s, p) => s + (p.total_pares ?? 0), 0)
   const total = deHoy.reduce((s, p) => s + (p.total_precio ?? 0), 0)
+
+  const partes = [
+    ...(conPedidos ? [`${formatMiles(deHoy.length)} ${deHoy.length === 1 ? 'pedido' : 'pedidos'}`, formatGs(total)] : []),
+    `${formatMiles(visitas)} ${visitas === 1 ? 'visita' : 'visitas'}`,
+  ]
   return (
-    <>
-      <Kpi titulo="Pedidos" valor={formatMiles(deHoy.length)} />
-      <Kpi titulo="Pares" valor={formatMiles(pares)} />
-      <Kpi titulo="Total vendido" valor={formatGs(total)} className="col-span-2 lg:col-span-1" />
-    </>
+    <p className="mb-6 text-sm text-muted-foreground">
+      <span className="font-medium text-foreground">{equipo ? 'Hoy, el equipo' : 'Hoy'}:</span> {partes.join(' · ')}
+    </p>
   )
 }
 
