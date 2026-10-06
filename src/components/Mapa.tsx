@@ -85,6 +85,7 @@ export default function Mapa({
   const marcadores = useRef(new Map<string, L.Marker>())
   const claveAnterior = useRef('')
   const enfocado = useRef<string | null>(null)
+  const temporizador = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
     if (!contenedor.current) return
@@ -96,9 +97,6 @@ export default function Mapa({
     const cluster = L.markerClusterGroup({
       iconCreateFunction: iconoCluster,
       showCoverageOnHover: false,
-      // Sin la animacion de agrupar/desagrupar: si el mapa se mueve o se rearma mientras
-      // corre, el plugin se rompe (el mapa queda sin puntos o con la pantalla de error).
-      animate: false,
     })
     // Sin el prefijo "Leaflet"; la atribucion a OpenStreetMap se mantiene (lo exige su licencia).
     L.control.attribution({ prefix: false }).addTo(m)
@@ -110,6 +108,7 @@ export default function Mapa({
     ro.observe(contenedor.current)
     return () => {
       ro.disconnect()
+      clearTimeout(temporizador.current)
       m.remove()
       mapa.current = null
       capa.current = null
@@ -159,21 +158,31 @@ export default function Mapa({
       m.setView(marker.getLatLng(), 17, { animate: false })
       // No se usa `zoomToShowLayer`: deja avisos pendientes que, tras rearmar las
       // capas, se disparan sobre marcadores ya borrados y rompen el mapa.
-      // El plugin dibuja los marcadores al terminar el movimiento: se espera un instante.
-      // Se busca el marcador de nuevo porque las capas pueden haberse rearmado mientras
-      // tanto (por ejemplo, al reiniciarse los filtros al llegar desde la lista).
-      setTimeout(() => {
-        const actual = marcadores.current.get(enfocar)
-        if (!actual || !capa.current) return
-        const visible = capa.current.getVisibleParent(actual)
-        if (visible === actual) {
+      // El plugin dibuja los marcadores cuando termina de moverse y animarse: se reintenta
+      // unos instantes. Se busca el marcador de nuevo en cada intento porque las capas
+      // pueden haberse rearmado mientras tanto (por ejemplo, al reiniciarse los filtros
+      // al llegar desde la lista), y se corta si el enfoque cambio o el mapa se cerro.
+      const id = enfocar
+      let intentos = 0
+      const abrir = () => {
+        if (enfocado.current !== id || !mapa.current) return
+        const actual = marcadores.current.get(id)
+        const capaActual = capa.current
+        if (!actual || !capaActual) return
+        // Si el marcador ya esta dibujado (solo, o porque se desplego su grupo), se abre.
+        if (actual.getElement()) {
           actual.openPopup()
-        } else if (visible) {
-          // Sigue agrupado con otros en el mismo lugar: se despliega el grupo y se abre.
-          capa.current.once('spiderfied', () => actual.openPopup())
-          ;(visible as L.MarkerCluster).spiderfy()
+          return
         }
-      }, 80)
+        // Sigue agrupado con otros en el mismo lugar: se despliega el grupo. Si el plugin
+        // esta en plena animacion lo ignora, por eso se vuelve a pedir en cada intento
+        // (si ya esta desplegado, no hace nada).
+        const visible = capaActual.getVisibleParent(actual)
+        if (visible && visible !== actual && visible.getElement()) (visible as L.MarkerCluster).spiderfy()
+        if (++intentos < 20) temporizador.current = setTimeout(abrir, 100)
+      }
+      clearTimeout(temporizador.current)
+      temporizador.current = setTimeout(abrir, 80)
     } else if (!enfocar && enfocado.current) {
       enfocado.current = null
       encuadrarTodo()
