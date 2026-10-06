@@ -516,7 +516,6 @@ function ListaInformes() {
                   <Th campo="cliente" {...th}>Cliente</Th>
                   <Th campo="ciudad" {...th}>Ciudad</Th>
                   <Th campo="zona" {...th}>Zona</Th>
-                  <Th>Comentario</Th>
                   <Th campo="usuario" {...th}>Usuario</Th>
                   <Th>Ubicación</Th>
                 </tr>
@@ -528,9 +527,6 @@ function ListaInformes() {
                     <td className="max-w-[14rem] truncate whitespace-nowrap px-3 py-2.5 font-medium" title={i.cliente_nombre ?? undefined}>{i.cliente_nombre}</td>
                     <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={i.ciudad ?? undefined}>{i.ciudad}</td>
                     <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={i.zona ?? undefined}>{i.zona}</td>
-                    <td className="max-w-xs truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={i.comentario ?? undefined}>
-                      {i.comentario}
-                    </td>
                     <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground">{autorDe(i)}</td>
                     <td className="whitespace-nowrap px-3 py-2.5" onClick={(ev) => ev.stopPropagation()}>
                       <Link to={`/informes/mapa?informe=${i.id}`} className="text-primary hover:underline">Ver en mapa</Link>

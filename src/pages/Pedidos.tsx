@@ -647,7 +647,6 @@ function ListaPedidos() {
                   <Th campo="cliente" {...th}>Cliente</Th>
                   <Th campo="ciudad" {...th}>Ciudad</Th>
                   <Th campo="zona" {...th}>Zona</Th>
-                  <Th campo="tipo" {...th}>Tipo</Th>
                   <Th campo="marca" {...th}>Marca</Th>
                   <Th campo="pares" {...th} className="text-right">Pares</Th>
                   <Th campo="usuario" {...th}>Usuario</Th>
@@ -665,7 +664,6 @@ function ListaPedidos() {
                     <td className="max-w-[16rem] truncate whitespace-nowrap px-3 py-2.5" title={p.cliente_nombre ?? undefined}>{p.cliente_nombre}</td>
                     <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={p.ciudad ?? undefined}>{p.ciudad}</td>
                     <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={p.zona ?? undefined}>{p.zona}</td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">{p.tipo}</td>
                     <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground" title={p.marca ?? undefined}>{p.marca}</td>
                     <td className="tabular whitespace-nowrap px-3 py-2.5 text-right text-muted-foreground">{formatMiles(p.total_pares)}</td>
                     <td className="max-w-[10rem] truncate whitespace-nowrap px-3 py-2.5 text-muted-foreground">{autorDe(p)}</td>
