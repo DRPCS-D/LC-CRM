@@ -84,6 +84,7 @@ export default function Mapa({
   const capa = useRef<L.MarkerClusterGroup | null>(null)
   const marcadores = useRef(new Map<string, L.Marker>())
   const claveAnterior = useRef('')
+  const enfocado = useRef<string | null>(null)
 
   useEffect(() => {
     if (!contenedor.current) return
@@ -108,13 +109,14 @@ export default function Mapa({
       capa.current = null
       marcadores.current.clear()
       claveAnterior.current = ''
+      enfocado.current = null
     }
   }, [])
 
+  // Las capas se rearman cada vez que llega otra lista de puntos.
   useEffect(() => {
-    const m = mapa.current
     const cluster = capa.current
-    if (!m || !cluster) return
+    if (!cluster) return
     cluster.clearLayers()
     marcadores.current.clear()
     const nuevos = puntos.map((p) => {
@@ -124,43 +126,40 @@ export default function Mapa({
       return marker
     })
     cluster.addLayers(nuevos)
-
-    // Reencuadrar solo si cambio QUE se muestra (un filtro), no cuando llega
-    // la misma lista refrescada: si no, el mapa saltaria mientras se lo mira.
-    const clave = puntos.map((p) => p.id).join(',')
-    if (clave !== claveAnterior.current) {
-      claveAnterior.current = clave
-      // Si hay un punto para enfocar (viene de "Ver en mapa"), no encuadrar
-      // todos: el otro efecto lo acerca, y los dos juntos se pisan.
-      if (enfocar && marcadores.current.has(enfocar)) {
-        // nada: lo resuelve el efecto de `enfocar`
-      } else if (puntos.length > 0) {
-        m.fitBounds(L.latLngBounds(puntos.map((p) => [p.lat, p.lng])), { padding: [40, 40], maxZoom: 15 })
-      } else {
-        m.setView(PARAGUAY, 6)
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [puntos])
 
-  // Acerca el mapa al punto pedido y abre su popup. Una sola vez por punto:
-  // si la lista se refresca por detras, no se vuelve a mover el mapa.
-  const enfocado = useRef<string | null>(null)
+  // Donde mira el mapa. Va todo en un solo efecto (y sin animaciones) porque
+  // encuadrar y acercar a un punto por separado se pisaban entre si:
+  //  · punto pedido (`enfocar`) que todavia no se mostro: se acerca y abre su popup;
+  //  · se quito el enfoque: se vuelve a encuadrar todo;
+  //  · cambio QUE se muestra (un filtro): se reencuadra. Si llega la misma lista
+  //    refrescada no se toca, para que el mapa no salte mientras se lo mira.
   useEffect(() => {
-    if (!enfocar) {
-      enfocado.current = null
-      return
-    }
     const m = mapa.current
-    const marker = marcadores.current.get(enfocar)
-    if (!m || !marker || !capa.current || enfocado.current === enfocar) return
-    enfocado.current = enfocar
-    // Primero se centra de golpe (sin animacion, que se pisaba con el
-    // encuadre) y despues se pide mostrar el marcador: si sigue agrupado con
-    // otros en el mismo lugar, el cluster lo despliega.
-    m.setView(marker.getLatLng(), 17, { animate: false })
-    capa.current.zoomToShowLayer(marker, () => marker.openPopup())
-  }, [enfocar, puntos])
+    const cluster = capa.current
+    if (!m || !cluster) return
+    const clave = puntos.map((p) => p.id).join(',')
+    const cambioLista = clave !== claveAnterior.current
+    claveAnterior.current = clave
+
+    const encuadrarTodo = () => {
+      if (puntos.length > 0) m.fitBounds(L.latLngBounds(puntos.map((p) => [p.lat, p.lng])), { padding: [40, 40], maxZoom: 15, animate: false })
+      else m.setView(PARAGUAY, 6, { animate: false })
+    }
+
+    const marker = enfocar ? marcadores.current.get(enfocar) : undefined
+    if (enfocar && marker && enfocado.current !== enfocar) {
+      enfocado.current = enfocar
+      m.setView(marker.getLatLng(), 17, { animate: false })
+      // Si sigue agrupado con otros en el mismo lugar, el cluster lo despliega.
+      cluster.zoomToShowLayer(marker, () => marker.openPopup())
+    } else if (!enfocar && enfocado.current) {
+      enfocado.current = null
+      encuadrarTodo()
+    } else if (cambioLista) {
+      encuadrarTodo()
+    }
+  }, [puntos, enfocar])
 
   return <div ref={contenedor} className={cn('z-0 h-[65vh] min-h-80 w-full rounded-lg border border-border', className)} />
 }

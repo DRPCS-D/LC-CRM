@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, ListFilter, MapPin, Pencil, Plus, Store, Trash2, Upload } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ClienteSelector } from '@/components/ClienteSelector'
@@ -491,14 +491,19 @@ function MapaClientes() {
   const { data, loading, error } = useClientes()
   const [seleccion, setSeleccion] = useState<Cliente | null>(null)
   const [enfocar, setEnfocar] = useState<string | null>(null)
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
+  const aplicado = useRef<string | null>(null)
 
-  // Llegar con ?cliente=<id> (desde "Ver en el mapa") enfoca ese cliente.
+  // Llegar con ?cliente=<id> (desde "Ver en el mapa") enfoca ese cliente, una
+  // sola vez: si los datos se refrescan por detras, no se vuelve a enfocar.
   useEffect(() => {
     const id = params.get('cliente')
-    if (id && data.length) {
-      const c = data.find((x) => x.id === id)
-      if (c) { setSeleccion(c); setEnfocar(c.id) }
+    if (!id || id === aplicado.current || !data.length) return
+    const c = data.find((x) => x.id === id)
+    if (c) {
+      aplicado.current = id
+      setSeleccion(c)
+      setEnfocar(c.id)
     }
   }, [data, params])
 
@@ -533,7 +538,12 @@ function MapaClientes() {
             }}
           />
         </div>
-        <Button variant="outline" onClick={() => { setSeleccion(null); setEnfocar(null) }}>Todos</Button>
+        <Button variant="outline" onClick={() => {
+          setSeleccion(null)
+          setEnfocar(null)
+          aplicado.current = null
+          setParams({}, { replace: true })
+        }}>Todos</Button>
         <span className="text-xs text-muted-foreground">{conUbicacion.length} de {data.length} clientes con ubicacion</span>
       </div>
       <Suspense fallback={<Cargando texto="Cargando mapa…" />}>
