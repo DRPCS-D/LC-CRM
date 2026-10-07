@@ -44,7 +44,7 @@
   --radius: 0.5rem;
 
   /* Fondo grisaceo y tarjetas blancas encima: asi se distinguen KPIs, tablas y buscadores. */
-  --background: oklch(0.94 0.007 250);
+  --background: oklch(0.96 0.007 250);
   --foreground: oklch(0.21 0.02 255);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.21 0.02 255);
