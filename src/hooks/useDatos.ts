@@ -10,7 +10,7 @@ import { supabase } from '@/lib/supabase'
  * vendedor recibe solo sus pedidos e informes aunque aca se pida "todo".
  */
 
-const USUARIO_EMBEBIDO = 'usuario:usuarios(username, nombre, foto_path)'
+const USUARIO_EMBEBIDO = 'usuario:usuarios(username, nombre, foto_path, rol)'
 
 export const clientes = crearRecurso<Cliente>(
   () =>

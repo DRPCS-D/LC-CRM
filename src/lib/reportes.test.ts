@@ -29,7 +29,7 @@ function pedido(p: Partial<Pedido>): Pedido {
     forma_pago: null,
     legacy_id: null,
     legacy_usuario: null,
-    usuario: { username: 'ana', nombre: 'Ana', foto_path: null },
+    usuario: { username: 'ana', nombre: 'Ana', foto_path: null, rol: 'vendedor' },
     ...p,
   }
 }

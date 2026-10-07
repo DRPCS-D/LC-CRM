@@ -34,7 +34,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { useAuth } from '@/hooks/useAuth'
 import { useEstadoSesion } from '@/hooks/useEstadoSesion'
 import { clientes as recursoClientes, informes as recursoInformes, mensajeDeError, useClientes, useInformes } from '@/hooks/useDatos'
-import { autorDe, type Cliente, type Informe } from '@/lib/database.types'
+import { autorDe, ROL_LABEL, ROLES, type Cliente, type Informe, type Rol } from '@/lib/database.types'
 import { descargarCSV } from '@/lib/exportar'
 import { diaLocal, formatFecha, formatFechaHora, formatHora, haceDias, hoyLocal, marcaDeTiempo, normalizar } from '@/lib/format'
 import { escaparHtml } from '@/lib/html'
@@ -292,13 +292,14 @@ interface FiltrosInforme {
   busqueda: string
   clientes: string[]
   usuarios: string[]
+  roles: Rol[]
   ciudades: string[]
   zonas: string[]
   desde: string
   hasta: string
 }
 
-const FILTROS_VACIOS: FiltrosInforme = { busqueda: '', clientes: [], usuarios: [], ciudades: [], zonas: [], desde: '', hasta: '' }
+const FILTROS_VACIOS: FiltrosInforme = { busqueda: '', clientes: [], usuarios: [], roles: [], ciudades: [], zonas: [], desde: '', hasta: '' }
 
 function filtrarInformes(data: Informe[], f: FiltrosInforme): Informe[] {
   const q = normalizar(f.busqueda)
@@ -306,6 +307,7 @@ function filtrarInformes(data: Informe[], f: FiltrosInforme): Informe[] {
     if (q && !normalizar([i.cliente_nombre, i.comentario, autorDe(i), i.ciudad, i.zona].join(' ')).includes(q)) return false
     if (f.clientes.length && !f.clientes.includes(i.cliente_nombre ?? '')) return false
     if (f.usuarios.length && !f.usuarios.includes(autorDe(i))) return false
+    if (f.roles?.length && !(i.usuario && f.roles.includes(i.usuario.rol))) return false
     if (f.ciudades.length && !f.ciudades.includes(i.ciudad ?? '')) return false
     if (f.zonas.length && !f.zonas.includes(i.zona ?? '')) return false
     const dia = diaLocal(i.created_at)
@@ -316,7 +318,7 @@ function filtrarInformes(data: Informe[], f: FiltrosInforme): Informe[] {
 }
 
 function contarFiltros(f: FiltrosInforme): number {
-  return f.clientes.length + f.usuarios.length + f.ciudades.length + f.zonas.length + (f.desde ? 1 : 0) + (f.hasta ? 1 : 0)
+  return f.clientes.length + f.usuarios.length + (f.roles?.length ?? 0) + f.ciudades.length + f.zonas.length + (f.desde ? 1 : 0) + (f.hasta ? 1 : 0)
 }
 
 /** Boton "Filtros" con la cantidad de filtros activos, igual que en la tabla. */
@@ -398,6 +400,7 @@ function PanelFiltros({
       <CardBody className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MultiSelect label="Cliente" opciones={opciones.clientes} seleccion={f.clientes} onCambiar={(clientes) => onCambiar({ clientes })} />
+          {veTodo && <MultiSelect label="Rol" opciones={ROLES.map((r) => ROL_LABEL[r])} seleccion={(f.roles ?? []).map((r) => ROL_LABEL[r])} onCambiar={(l) => onCambiar({ roles: ROLES.filter((r) => l.includes(ROL_LABEL[r])) })} />}
           {veTodo && <MultiSelect label="Usuario" opciones={opciones.usuarios} seleccion={f.usuarios} onCambiar={(usuarios) => onCambiar({ usuarios })} />}
           <MultiSelect label="Ciudad" opciones={opciones.ciudades} seleccion={f.ciudades} onCambiar={(ciudades) => onCambiar({ ciudades })} />
           <MultiSelect label="Zona" opciones={opciones.zonas} seleccion={f.zonas} onCambiar={(zonas) => onCambiar({ zonas })} />
@@ -516,7 +519,7 @@ function ListaInformes() {
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card">
           <div className="min-h-0 flex-1 overflow-auto">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 z-10 whitespace-nowrap bg-muted shadow-[0_1px_0_0_var(--color-border)]">
+              <thead className="sticky top-0 z-10 whitespace-nowrap bg-card shadow-[0_1px_0_0_var(--color-border)]">
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <Th campo="fecha" {...th}>Fecha</Th>
                   <Th campo="cliente" {...th}>Cliente</Th>

@@ -59,6 +59,7 @@ export interface UsuarioResumen {
   username: string
   nombre: string
   foto_path: string | null
+  rol: Rol
 }
 
 export interface Cliente {
