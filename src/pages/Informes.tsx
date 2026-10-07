@@ -434,6 +434,9 @@ interface Estado extends FiltrosInforme {
   orden: Orden<CampoOrden>
 }
 
+/** Filtros y orden de la tabla; el mapa comparte los filtros (misma clave de sesion). */
+const ESTADO_INICIAL: Estado = { ...FILTROS_VACIOS, orden: { campo: 'fecha', dir: 'desc' } }
+
 function valorOrden(i: Informe, c: CampoOrden): unknown {
   switch (c) {
     case 'fecha': return i.created_at
@@ -446,7 +449,7 @@ function valorOrden(i: Informe, c: CampoOrden): unknown {
 
 function ListaInformes() {
   const { data, loading, error } = useInformes()
-  const [e, setE] = useEstadoSesion<Estado>('informes.filtros', { ...FILTROS_VACIOS, orden: { campo: 'fecha', dir: 'desc' } })
+  const [e, setE] = useEstadoSesion<Estado>('informes.filtros', ESTADO_INICIAL)
   // Plegado/desplegado vive aparte de los filtros: los valores se recuerdan al
   // cambiar de pantalla (sessionStorage), pero el panel arranca siempre plegado.
   const [panel, setPanel] = useState(false)
@@ -699,9 +702,8 @@ function InformeDetalleModal({
 
 function MapaInformes() {
   const { data, loading, error } = useInformes()
-  // Arranca en "Semana" (todo junto son mil y pico de puntos agrupados que no dicen
-  // nada) y recuerda lo ultimo que se eligio mientras dure la sesion.
-  const [f, setF] = useEstadoSesion<FiltrosInforme>('informes.mapa', { ...FILTROS_VACIOS, desde: diaLocal(haceDias(7)) })
+  // Los filtros son los mismos que en la tabla (misma clave de sesion): lo que se filtra en una vista se ve en la otra.
+  const [f, setF] = useEstadoSesion<Estado>('informes.filtros', ESTADO_INICIAL)
   const [panel, setPanel] = useState(false)
   // El mapa de calor es solo para admin y supervisor.
   const { veTodo } = useAuth()
@@ -712,7 +714,7 @@ function MapaInformes() {
 
   // Llegar a un informe puntual: que ningun filtro lo oculte
   useEffect(() => {
-    if (enfocar) setF(FILTROS_VACIOS)
+    if (enfocar) setF((s) => ({ ...s, ...FILTROS_VACIOS }))
   }, [enfocar, setF])
 
   const filtrados = useMemo(() => filtrarInformes(data, f), [data, f])
@@ -818,6 +820,12 @@ function MapaInformes() {
                 ? `${vendedor} no tiene visitas el ${formatFecha(dia)}.`
                 : `${recorrido.length} ${recorrido.length === 1 ? 'visita' : 'visitas'} de ${vendedor} · ${formatHora(recorrido[0].created_at)} a ${formatHora(recorrido[recorrido.length - 1].created_at)} · ${largoRutaKm(recorrido).toLocaleString('es-PY', { maximumFractionDigits: 1 })} km en línea recta`
             : `${filtrados.length} visitas en el mapa${veTodo && vista === 'calor' ? ' · más rojo, más visitas' : ''}`}
+          {!enRuta && f.busqueda && (
+            <>
+              {' · búsqueda '}“{f.busqueda}”{' '}
+              <button type="button" className="text-primary hover:underline" onClick={() => cambiarFiltros({ busqueda: '' })}>quitar</button>
+            </>
+          )}
         </span>
         {enfocar && <Button variant="ghost" size="sm" onClick={() => navigate('/informes/mapa', { replace: true })}>Quitar enfoque</Button>}
       </div>
