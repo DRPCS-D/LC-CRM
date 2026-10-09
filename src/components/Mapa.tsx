@@ -229,12 +229,16 @@ export default function Mapa({
           actual.openPopup()
           return
         }
-        // Sigue agrupado con otros en el mismo lugar: se despliega el grupo. Si el plugin
-        // esta en plena animacion lo ignora, por eso se vuelve a pedir en cada intento
-        // (si ya esta desplegado, no hace nada).
+        // Sigue agrupado con otras visitas cercanas: se acerca un nivel mas por intento hasta que
+        // se separe; recien en el zoom maximo (visitas en el mismo lugar) se despliega el grupo.
+        // Si el plugin esta en plena animacion lo ignora, por eso se vuelve a pedir en cada
+        // intento (si ya esta desplegado, no hace nada).
         const visible = capaActual.getVisibleParent(actual)
-        if (visible && visible !== actual && visible.getElement()) (visible as L.MarkerCluster).spiderfy()
-        if (++intentos < 20) temporizador.current = setTimeout(abrir, 100)
+        if (visible && visible !== actual && visible.getElement()) {
+          if (m.getZoom() < m.getMaxZoom()) m.setView(actual.getLatLng(), m.getZoom() + 1, { animate: false })
+          else (visible as L.MarkerCluster).spiderfy()
+        }
+        if (++intentos < 30) temporizador.current = setTimeout(abrir, 100)
       }
       clearTimeout(temporizador.current)
       temporizador.current = setTimeout(abrir, 80)
