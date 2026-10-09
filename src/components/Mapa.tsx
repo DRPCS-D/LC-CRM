@@ -241,7 +241,8 @@ export default function Mapa({
     } else if (!enfocar && enfocado.current) {
       enfocado.current = null
       encuadrarTodo()
-    } else if (cambioLista) {
+    } else if (cambioLista && !enfocar) {
+      // (con un punto enfocado no se reencuadra: se quedaria alejado del punto)
       encuadrarTodo()
     }
   }, [puntos, enfocar])
