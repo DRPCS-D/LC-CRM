@@ -36,7 +36,8 @@ import { useEstadoSesion } from '@/hooks/useEstadoSesion'
 import { clientes as recursoClientes, informes as recursoInformes, mensajeDeError, useClientes, useInformes } from '@/hooks/useDatos'
 import { autorDe, ROL_LABEL, ROLES, type Cliente, type Informe, type Rol } from '@/lib/database.types'
 import { descargarCSV } from '@/lib/exportar'
-import { diaLocal, formatFecha, formatFechaHora, formatHora, haceDias, hoyLocal, marcaDeTiempo, normalizar } from '@/lib/format'
+import { diaLocal, formatFecha, formatFechaHora, formatHora, formatMiles, haceDias, hoyLocal, marcaDeTiempo, normalizar } from '@/lib/format'
+import { buscarUbicacion as buscarPosicion, ErrorUbicacion, PRECISION_MALA, PRECISION_OBJETIVO, type Ubicacion } from '@/lib/ubicacion'
 import { escaparHtml } from '@/lib/html'
 import { opcionesDe, ordenar, type Orden } from '@/lib/orden'
 import { diaConVisitas, largoRutaKm } from '@/lib/ruta'
@@ -75,68 +76,10 @@ export default function Informes() {
 // Nuevo informe
 // ═══════════════════════════════════════════════════════════════════════════
 
-interface Ubicacion {
-  lat: number
-  lng: number
-  precision: number
-  fuente: 'GPS' | 'red'
-}
-
 type EstadoUbicacion =
-  | { tipo: 'buscando' }
+  | { tipo: 'buscando'; /** Mejor precision lograda hasta ahora (m), si ya hubo alguna lectura. */ precision?: number }
   | { tipo: 'lista'; ubicacion: Ubicacion }
   | { tipo: 'error'; mensaje: string; denegado: boolean }
-
-const MENSAJE_GEO: Record<number, string> = {
-  1: 'Permiso de ubicación denegado.',
-  2: 'No se pudo determinar la ubicación. Salí a un lugar abierto y tocá Reintentar.',
-  3: 'Se agotó el tiempo buscando la ubicación. Tocá Reintentar.',
-}
-
-class ErrorUbicacion extends Error {
-  denegado: boolean
-  constructor(mensaje: string, denegado: boolean) {
-    super(mensaje)
-    this.denegado = denegado
-  }
-}
-
-function pedirPosicion(alta: boolean): Promise<GeolocationPosition> {
-  return new Promise((resolve, reject) =>
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: alta,
-      timeout: alta ? 30_000 : 20_000,
-      maximumAge: 0,
-    }),
-  )
-}
-
-/**
- * Primero intenta GPS de alta precision; si falla por algo que no sea que el
- * usuario nego el permiso, cae a la ubicacion por red (menos precisa pero
- * casi siempre disponible bajo techo).
- */
-async function obtenerUbicacion(): Promise<Ubicacion> {
-  if (!('geolocation' in navigator)) throw new Error('Este dispositivo no permite obtener la ubicación.')
-  const aUbicacion = (p: GeolocationPosition, fuente: Ubicacion['fuente']): Ubicacion => ({
-    lat: p.coords.latitude,
-    lng: p.coords.longitude,
-    precision: Math.round(p.coords.accuracy),
-    fuente,
-  })
-  try {
-    return aUbicacion(await pedirPosicion(true), 'GPS')
-  } catch (e) {
-    const codigo = (e as GeolocationPositionError).code
-    if (codigo === 1) throw new ErrorUbicacion(MENSAJE_GEO[1], true)
-    try {
-      return aUbicacion(await pedirPosicion(false), 'red')
-    } catch (e2) {
-      const c2 = (e2 as GeolocationPositionError).code
-      throw new ErrorUbicacion(MENSAJE_GEO[c2] ?? MENSAJE_GEO[2], c2 === 1)
-    }
-  }
-}
 
 /** Pasos para habilitar la ubicacion segun el dispositivo; se ve solo cuando el permiso esta denegado. */
 function AyudaPermisoUbicacion() {
@@ -162,16 +105,22 @@ function NuevoInforme() {
   const [guardando, setGuardando] = useState(false)
   const clave = useRef(crypto.randomUUID())
   const intento = useRef(0)
+  const cortarBusqueda = useRef(() => {})
 
   async function buscarUbicacion() {
+    cortarBusqueda.current()
     const mio = ++intento.current
     setUbicacion({ tipo: 'buscando' })
+    const { resultado, cancelar } = buscarPosicion((precision) => {
+      if (mio === intento.current) setUbicacion({ tipo: 'buscando', precision })
+    })
+    cortarBusqueda.current = cancelar
     try {
-      const u = await obtenerUbicacion()
+      const u = await resultado
       if (mio === intento.current) setUbicacion({ tipo: 'lista', ubicacion: u })
     } catch (e) {
       if (mio === intento.current) {
-        setUbicacion({ tipo: 'error', mensaje: e instanceof Error ? e.message : MENSAJE_GEO[2], denegado: e instanceof ErrorUbicacion && e.denegado })
+        setUbicacion({ tipo: 'error', mensaje: e instanceof Error ? e.message : 'No se pudo determinar la ubicación.', denegado: e instanceof ErrorUbicacion && e.denegado })
       }
     }
   }
@@ -179,7 +128,10 @@ function NuevoInforme() {
   // Se captura cada vez que se abre la pestana
   useEffect(() => {
     buscarUbicacion()
-    return () => { intento.current++ }
+    return () => {
+      intento.current++
+      cortarBusqueda.current()
+    }
   }, [])
 
   // Si el permiso estaba denegado y la persona lo habilita en los ajustes, se reintenta solo.
@@ -211,7 +163,7 @@ function NuevoInforme() {
           p_comentario: comentario,
           p_lat: lat,
           p_lng: lng,
-          p_actualizar_ubicacion: actualizar,
+          p_actualizar_ubicacion: actualizar && !imprecisa,
           p_idempotency_key: clave.current,
         }),
         new Promise<never>((_, rechazar) => setTimeout(() => rechazar(new Error('timeout')), 45_000)),
@@ -236,6 +188,10 @@ function NuevoInforme() {
   }
 
   const lista = ubicacion.tipo === 'lista'
+  const precision = lista ? ubicacion.ubicacion.precision : null
+  // Con una lectura muy imprecisa no se pisa la ubicacion del cliente (quedaria "en el medio de la nada").
+  const imprecisa = precision !== null && precision > PRECISION_MALA
+  const dudosa = precision !== null && precision > PRECISION_OBJETIVO * 2.5
 
   return (
     <Card className="max-w-2xl">
@@ -254,8 +210,15 @@ function NuevoInforme() {
               <LocateFixed className={cn('mt-0.5 size-5 shrink-0', lista ? 'text-success' : ubicacion.tipo === 'error' ? 'text-destructive' : 'text-muted-foreground')} />
               <div className="min-w-0 text-sm">
                 <p className="font-medium text-foreground">Ubicación</p>
-                {ubicacion.tipo === 'buscando' && <p className="text-muted-foreground">Buscando ubicación…</p>}
-                {ubicacion.tipo === 'lista' && <CircleCheck className="size-5 text-success" aria-label="Ubicación obtenida" />}
+                {ubicacion.tipo === 'buscando' && (
+                  <p className="text-muted-foreground">Buscando ubicación…{ubicacion.precision !== undefined && ` (afinando: ±${formatMiles(ubicacion.precision)} m)`}</p>
+                )}
+                {ubicacion.tipo === 'lista' && !dudosa && <CircleCheck className="size-5 text-success" aria-label="Ubicación obtenida" />}
+                {ubicacion.tipo === 'lista' && dudosa && (
+                  <p className={imprecisa ? 'text-destructive' : 'text-muted-foreground'}>
+                    {imprecisa ? 'Ubicación poco precisa' : 'Ubicación aproximada'} (±{formatMiles(precision)} m). Salí a un lugar abierto y tocá Reintentar.
+                  </p>
+                )}
                 {ubicacion.tipo === 'error' && <p className="text-destructive">{ubicacion.mensaje}</p>}
                 {denegado && <AyudaPermisoUbicacion />}
               </div>
@@ -267,8 +230,11 @@ function NuevoInforme() {
         </div>
 
         <label className="flex items-start gap-2.5 text-sm">
-          <input type="checkbox" checked={actualizar} onChange={(e) => setActualizar(e.target.checked)} className="mt-0.5 size-4 accent-[var(--primary)]" />
-          <span>Actualizar la ubicación del cliente con esta visita</span>
+          <input type="checkbox" checked={actualizar && !imprecisa} disabled={imprecisa} onChange={(e) => setActualizar(e.target.checked)} className="mt-0.5 size-4 accent-[var(--primary)] disabled:opacity-50" />
+          <span>
+            Actualizar la ubicación del cliente con esta visita
+            {imprecisa && <span className="block text-xs text-muted-foreground">No disponible: la ubicación no es lo bastante precisa.</span>}
+          </span>
         </label>
 
         <Button size="lg" className="w-full" onClick={guardar} disabled={!cliente || !lista || guardando}>
