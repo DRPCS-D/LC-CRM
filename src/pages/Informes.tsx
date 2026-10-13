@@ -678,10 +678,14 @@ function MapaInformes() {
   const navigate = useNavigate()
   const enfocar = params.get('informe')
 
-  // Llegar a un informe puntual ("Ver en mapa"): se muestran todos, para que ningun filtro lo
-  // oculte, pero sin tocar los filtros guardados (vuelven al quitar el enfoque). Se decide
-  // en el mismo render, asi el mapa recibe la lista final desde el primer momento.
-  const filtrados = useMemo(() => (enfocar ? data : filtrarInformes(data, f)), [data, f, enfocar])
+  // El mapa muestra lo mismo que la tabla (mismos filtros). Desde "Ver en mapa" el informe enfocado
+  // ya cumple el filtro; si se llega por un enlace y no lo cumple, se agrega para que se vea igual.
+  const filtrados = useMemo(() => {
+    const base = filtrarInformes(data, f)
+    if (!enfocar || base.some((i) => i.id === enfocar)) return base
+    const buscado = data.find((i) => i.id === enfocar)
+    return buscado ? [...base, buscado] : base
+  }, [data, f, enfocar])
 
   // Tocar cualquier filtro (incluso "Todo", que puede dejarlos igual) suelta el
   // informe enfocado: si no, el mapa se queda acercado a ese punto.
