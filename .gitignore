@@ -47,3 +47,6 @@ docs/guia-de-uso/
 
 # Datos reales del Sheet (clientes, pedidos, usuarios): nunca al repo publico
 /migracion/
+
+# Demos animadas para el portafolio (no se suben)
+/demo/
