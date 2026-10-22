@@ -1,5 +1,6 @@
-import { Heart, Loader2, MapPin, MessageCircle, Send, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { Heart, Loader2, MapPin, MessageCircle, Send, Trash2, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { toast } from 'sonner'
 import { VisorImagen } from '@/components/VisorImagen'
 import { Avatar } from '@/components/ui/avatar'
@@ -49,11 +50,6 @@ export default function Muro() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <div className="mb-5">
-        <h1 className="text-xl font-semibold text-foreground">Muro de visitas</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Prueba · solo administrador. Las visitas con foto, con me gusta y comentarios.</p>
-      </div>
-
       {loading && data.length === 0 ? (
         <Cargando texto="Cargando visitas…" />
       ) : error && data.length === 0 ? (
@@ -90,8 +86,6 @@ function Publicacion({ informe, likes, comentarios }: { informe: Informe; likes:
   const [visor, setVisor] = useState(false)
   const [verComentarios, setVerComentarios] = useState(false)
   const [verLikes, setVerLikes] = useState(false)
-  const [texto, setTexto] = useState('')
-  const [enviando, setEnviando] = useState(false)
   const [ocupado, setOcupado] = useState(false)
   const [animar, setAnimar] = useState(false)
 
@@ -109,26 +103,6 @@ function Publicacion({ informe, likes, comentarios }: { informe: Informe; likes:
     await informeLikes.refetch()
     setOcupado(false)
     setTimeout(() => setAnimar(false), 400)
-  }
-
-  async function comentar() {
-    const t = texto.trim()
-    if (!t || enviando) return
-    setEnviando(true)
-    const { error } = await supabase.from('informe_comentarios').insert({ informe_id: informe.id, texto: t })
-    if (error) toast.error(mensajeDeError(error, 'No se pudo enviar el comentario.'))
-    else {
-      setTexto('')
-      setVerComentarios(true)
-      await informeComentarios.refetch()
-    }
-    setEnviando(false)
-  }
-
-  async function borrarComentario(id: string) {
-    const { error } = await supabase.from('informe_comentarios').delete().eq('id', id)
-    if (error) return void toast.error(mensajeDeError(error, 'No se pudo borrar el comentario.'))
-    informeComentarios.refetch()
   }
 
   return (
@@ -184,48 +158,114 @@ function Publicacion({ informe, likes, comentarios }: { informe: Informe; likes:
           {informe.comentario && <span className="block">{informe.comentario}</span>}
         </p>
 
-        {comentarios.length > 0 && !verComentarios && (
-          <button type="button" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setVerComentarios(true)}>
-            Ver {comentarios.length === 1 ? 'el comentario' : `los ${comentarios.length} comentarios`}
+        <button type="button" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setVerComentarios(true)}>
+          {comentarios.length === 0 ? 'Agregá un comentario…' : comentarios.length === 1 ? 'Ver el comentario' : `Ver los ${comentarios.length} comentarios`}
+        </button>
+      </div>
+      {verComentarios && <ComentariosSheet informe={informe} comentarios={comentarios} onCerrar={() => setVerComentarios(false)} />}
+    </article>
+  )
+}
+
+/** Ventana de comentarios de una publicacion: hoja desde abajo en el celular, ventana centrada en escritorio. */
+function ComentariosSheet({ informe, comentarios, onCerrar }: { informe: Informe; comentarios: InformeComentario[]; onCerrar: () => void }) {
+  const { usuario } = useAuth()
+  const [texto, setTexto] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const lista = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const previo = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCerrar()
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = previo
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [onCerrar])
+
+  async function comentar() {
+    const t = texto.trim()
+    if (!t || enviando) return
+    setEnviando(true)
+    const { error } = await supabase.from('informe_comentarios').insert({ informe_id: informe.id, texto: t })
+    if (error) toast.error(mensajeDeError(error, 'No se pudo enviar el comentario.'))
+    else {
+      setTexto('')
+      await informeComentarios.refetch()
+      lista.current?.scrollTo({ top: lista.current.scrollHeight, behavior: 'smooth' })
+    }
+    setEnviando(false)
+  }
+
+  async function borrar(id: string) {
+    const { error } = await supabase.from('informe_comentarios').delete().eq('id', id)
+    if (error) return void toast.error(mensajeDeError(error, 'No se pudo borrar el comentario.'))
+    informeComentarios.refetch()
+  }
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-[2px] sm:items-center sm:p-4"
+      onMouseDown={(e) => e.target === e.currentTarget && onCerrar()}
+    >
+      <div role="dialog" aria-modal="true" aria-label="Comentarios" className="flex h-[75dvh] w-full max-w-lg flex-col rounded-t-2xl border border-border bg-card shadow-xl sm:h-[70dvh] sm:rounded-2xl">
+        <div className="relative flex items-center justify-center border-b border-border px-4 py-3">
+          <span className="absolute top-1.5 h-1 w-10 rounded-full bg-border sm:hidden" />
+          <h2 className="mt-1 text-sm font-semibold text-foreground sm:mt-0">Comentarios</h2>
+          <button type="button" onClick={onCerrar} aria-label="Cerrar" className="absolute right-3 top-2.5 rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground">
+            <X className="size-4" />
           </button>
-        )}
-        {verComentarios && (
-          <ul className="space-y-1.5 pt-1">
-            {comentarios.map((c) => (
-              <li key={c.id} className="flex items-start gap-2 text-sm">
-                <p className="min-w-0 flex-1 break-words">
-                  <span className="font-semibold text-foreground">{c.usuario?.username ?? '—'}</span> {c.texto}
-                  <span className="ml-2 text-[11px] text-muted-foreground">{formatFechaHora(c.created_at)}</span>
-                </p>
+        </div>
+
+        <div ref={lista} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+          {comentarios.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">Todavía no hay comentarios. Sé el primero.</p>
+          ) : (
+            comentarios.map((c) => (
+              <div key={c.id} className="flex items-start gap-3">
+                <Avatar nombre={c.usuario?.username ?? '?'} fotoPath={c.usuario?.foto_path} className="size-9" />
+                <div className="min-w-0 flex-1 text-sm">
+                  <p>
+                    <span className="font-semibold text-foreground">{c.usuario?.username ?? '—'}</span>
+                    <span className="ml-2 text-xs text-muted-foreground">{formatFechaHora(c.created_at)}</span>
+                  </p>
+                  <p className="break-words text-foreground">{c.texto}</p>
+                </div>
                 {c.usuario_id === usuario?.id && (
-                  <button type="button" onClick={() => borrarComentario(c.id)} className="text-muted-foreground hover:text-destructive" title="Borrar comentario">
-                    <Trash2 className="size-3.5" />
+                  <button type="button" onClick={() => borrar(c.id)} className="p-1 text-muted-foreground hover:text-destructive" title="Borrar comentario">
+                    <Trash2 className="size-4" />
                   </button>
                 )}
-              </li>
-            ))}
-          </ul>
-        )}
+              </div>
+            ))
+          )}
+        </div>
 
         <form
-          className="flex items-center gap-2 border-t border-border pt-2.5"
+          className="flex items-center gap-3 border-t border-border px-4 py-3"
+          style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
           onSubmit={(e) => {
             e.preventDefault()
             comentar()
           }}
         >
+          {usuario && <Avatar nombre={usuario.username} fotoPath={usuario.foto_path} className="size-8" />}
           <input
+            autoFocus
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
             maxLength={500}
             placeholder="Agregá un comentario…"
-            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            className="h-10 min-w-0 flex-1 rounded-full border border-border bg-background px-4 text-sm outline-none placeholder:text-muted-foreground focus:border-primary"
           />
           <button type="submit" disabled={!texto.trim() || enviando} className="text-primary disabled:opacity-40" aria-label="Enviar comentario">
-            {enviando ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+            {enviando ? <Loader2 className="size-5 animate-spin" /> : <Send className="size-5" />}
           </button>
         </form>
       </div>
-    </article>
+    </div>,
+    document.body,
   )
 }
