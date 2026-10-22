@@ -1,4 +1,5 @@
 import {
+  Camera,
   ChevronsLeft,
   ChevronsRight,
   CircleCheck,
@@ -6,6 +7,7 @@ import {
   FilePlus2,
   FileText,
   Flame,
+  Images,
   ListFilter,
   Loader2,
   LocateFixed,
@@ -16,6 +18,7 @@ import {
   RefreshCw,
   Route as RutaIcono,
   Trash2,
+  X,
 } from 'lucide-react'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
@@ -24,6 +27,7 @@ import { ClienteSelector } from '@/components/ClienteSelector'
 import type { PuntoMapa } from '@/components/Mapa'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { VisorImagen } from '@/components/VisorImagen'
 import { Card, CardBody } from '@/components/ui/card'
 import { Cargando, ErrorBox, Vacio } from '@/components/ui/estado'
 import { Field, Input, Select, Textarea } from '@/components/ui/field'
@@ -38,7 +42,9 @@ import { autorDe, ROL_LABEL, ROLES, type Cliente, type Informe, type Rol } from 
 import { descargarCSV } from '@/lib/exportar'
 import { diaLocal, formatFecha, formatFechaHora, formatHora, formatMiles, haceDias, hoyLocal, marcaDeTiempo, normalizar } from '@/lib/format'
 import { buscarUbicacion as buscarPosicion, ErrorUbicacion, PRECISION_MALA, PRECISION_OBJETIVO, type Ubicacion } from '@/lib/ubicacion'
+import { borrarFotoPedido, subirFotoPedido, useUrlFoto } from '@/lib/fotos'
 import { escaparHtml } from '@/lib/html'
+import { prepararFoto } from '@/lib/imagen'
 import { opcionesDe, ordenar, type Orden } from '@/lib/orden'
 import { diaConVisitas, largoRutaKm } from '@/lib/ruta'
 import { supabase } from '@/lib/supabase'
@@ -97,12 +103,21 @@ function AyudaPermisoUbicacion() {
 }
 
 function NuevoInforme() {
+  const { usuario } = useAuth()
   const { data: clientes } = useClientes()
   const [cliente, setCliente] = useState<Cliente | null>(null)
   const [comentario, setComentario] = useState('')
   const [actualizar, setActualizar] = useState(true)
   const [ubicacion, setUbicacion] = useState<EstadoUbicacion>({ tipo: 'buscando' })
-  const [guardando, setGuardando] = useState(false)
+  const [guardando, setGuardando] = useState<'subiendo' | 'guardando' | null>(null)
+  const [foto, setFoto] = useState<Blob | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [visor, setVisor] = useState(false)
+  const [procesandoFoto, setProcesandoFoto] = useState(false)
+  const camaraRef = useRef<HTMLInputElement>(null)
+  const galeriaRef = useRef<HTMLInputElement>(null)
+  // La foto ya subida se reutiliza si hay que reintentar el guardado.
+  const fotoSubida = useRef<{ blob: Blob; path: string } | null>(null)
   const clave = useRef(crypto.randomUUID())
   const intento = useRef(0)
   const cortarBusqueda = useRef(() => {})
@@ -152,11 +167,43 @@ function NuevoInforme() {
     return () => estado?.removeEventListener('change', alCambiar)
   }, [denegado])
 
+  useEffect(() => {
+    if (!foto) return setPreviewUrl(null)
+    const url = URL.createObjectURL(foto)
+    setPreviewUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [foto])
+
+  async function cargarFoto(file: File | undefined) {
+    if (!file) return
+    setProcesandoFoto(true)
+    try {
+      setFoto(await prepararFoto(file))
+      fotoSubida.current = null
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'No se pudo leer la imagen.')
+    } finally {
+      setProcesandoFoto(false)
+    }
+  }
+
   async function guardar() {
-    if (!cliente || ubicacion.tipo !== 'lista') return
-    setGuardando(true)
+    if (!cliente || !usuario || ubicacion.tipo !== 'lista') return
     const { lat, lng } = ubicacion.ubicacion
     try {
+      let path: string | null = null
+      if (foto) {
+        path = fotoSubida.current?.blob === foto ? fotoSubida.current.path : null
+        if (!path) {
+          setGuardando('subiendo')
+          path = await Promise.race([
+            subirFotoPedido(foto, usuario.id, 'informes'),
+            new Promise<never>((_, rechazar) => setTimeout(() => rechazar(new Error('timeout')), 45_000)),
+          ])
+          fotoSubida.current = { blob: foto, path }
+        }
+      }
+      setGuardando('guardando')
       const { error } = await Promise.race([
         supabase.rpc('guardar_informe', {
           p_cliente_id: cliente.id,
@@ -165,6 +212,7 @@ function NuevoInforme() {
           p_lng: lng,
           p_actualizar_ubicacion: actualizar && !imprecisa,
           p_idempotency_key: clave.current,
+          p_imagen_path: path ?? undefined,
         }),
         new Promise<never>((_, rechazar) => setTimeout(() => rechazar(new Error('timeout')), 45_000)),
       ])
@@ -173,6 +221,8 @@ function NuevoInforme() {
       clave.current = crypto.randomUUID()
       setCliente(null)
       setComentario('')
+      setFoto(null)
+      fotoSubida.current = null
       recursoInformes.refetch()
       recursoClientes.refetch()
       buscarUbicacion()
@@ -183,7 +233,7 @@ function NuevoInforme() {
         toast.error(mensajeDeError(e as { message?: string }, 'No se pudo guardar el informe.'))
       }
     } finally {
-      setGuardando(false)
+      setGuardando(null)
     }
   }
 
@@ -203,6 +253,31 @@ function NuevoInforme() {
         <Field label="Comentario">
           <Textarea value={comentario} onChange={(e) => setComentario(e.target.value)} placeholder="¿Como fue la visita?" rows={4} />
         </Field>
+
+        <Field label="Foto (opcional)">
+          <input ref={camaraRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => { cargarFoto(e.target.files?.[0]); e.target.value = '' }} />
+          <input ref={galeriaRef} type="file" accept="image/*" hidden onChange={(e) => { cargarFoto(e.target.files?.[0]); e.target.value = '' }} />
+          {foto ? (
+            <div className="relative overflow-hidden rounded-lg border border-border bg-muted">
+              <button type="button" onClick={() => setVisor(true)} className="block w-full" aria-label="Ampliar foto">
+                {previewUrl && <img src={previewUrl} alt="Foto de la visita" className="aspect-[4/3] w-full cursor-zoom-in object-contain" />}
+              </button>
+              <Button size="icon" variant="secondary" className="absolute right-2 top-2 shadow" onClick={() => setFoto(null)} disabled={guardando !== null} title="Quitar foto">
+                <X />
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <Button type="button" size="lg" disabled={procesandoFoto} onClick={() => camaraRef.current?.click()}>
+                {procesandoFoto ? <Loader2 className="animate-spin" /> : <Camera />} Cámara
+              </Button>
+              <Button type="button" size="lg" disabled={procesandoFoto} onClick={() => galeriaRef.current?.click()}>
+                <Images /> Galería
+              </Button>
+            </div>
+          )}
+        </Field>
+        <VisorImagen src={visor ? previewUrl : null} onCerrar={() => setVisor(false)} />
 
         <div className="rounded-lg border border-border bg-muted/40 p-3">
           <div className="flex items-start justify-between gap-3">
@@ -237,8 +312,8 @@ function NuevoInforme() {
           </span>
         </label>
 
-        <Button size="lg" className="w-full" onClick={guardar} disabled={!cliente || !lista || guardando}>
-          {guardando ? <><Loader2 className="animate-spin" /> Guardando…</> : 'Guardar informe'}
+        <Button size="lg" className="w-full" onClick={guardar} disabled={!cliente || !lista || guardando !== null || procesandoFoto}>
+          {guardando === 'subiendo' ? <><Loader2 className="animate-spin" /> Subiendo foto…</> : guardando === 'guardando' ? <><Loader2 className="animate-spin" /> Guardando…</> : 'Guardar informe'}
         </Button>
         {(!cliente || !lista) && (
           <p className="-mt-2 text-center text-xs text-muted-foreground">
@@ -550,9 +625,12 @@ function InformeDetalleModal({
   const [cliente, setCliente] = useState<Cliente | null>(null)
   const [comentario, setComentario] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [visor, setVisor] = useState(false)
+  const fotoUrl = useUrlFoto(informe?.imagen_path)
 
   useEffect(() => {
     if (!informe) return
+    setVisor(false)
     setEditando(false)
     setError(null)
     setCliente(clientes.find((c) => c.id === informe.cliente_id) ?? null)
@@ -587,6 +665,7 @@ function InformeDetalleModal({
     setProcesando(false)
     if (err) return void toast.error(mensajeDeError(err, 'No se pudo eliminar el informe.'))
     toast.success('Informe eliminado')
+    borrarFotoPedido(informe.imagen_path)
     setBorrando(false)
     onCerrar()
     recursoInformes.refetch()
@@ -637,6 +716,11 @@ function InformeDetalleModal({
               <Dato label="Zona">{informe.zona}</Dato>
             </div>
             <Dato label="Comentario">{informe.comentario}</Dato>
+            {informe.imagen_path && (
+              <button type="button" onClick={() => setVisor(true)} disabled={!fotoUrl} className="block w-full overflow-hidden rounded-lg border border-border bg-muted" aria-label="Ampliar foto">
+                {fotoUrl ? <img src={fotoUrl} alt="Foto de la visita" className="max-h-72 w-full cursor-zoom-in object-contain" /> : <Cargando texto="Cargando foto…" className="py-10" />}
+              </button>
+            )}
             <a
               href={`https://www.google.com/maps?q=${informe.lat},${informe.lng}`}
               target="_blank"
@@ -648,6 +732,8 @@ function InformeDetalleModal({
           </div>
         )}
       </Modal>
+
+      <VisorImagen src={visor ? fotoUrl : null} onCerrar={() => setVisor(false)} />
 
       <ConfirmModal
         abierto={borrando}

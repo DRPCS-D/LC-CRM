@@ -16,6 +16,8 @@ export const TAMANO_MAXIMO = 20 * 1024 * 1024
 const LADO_MAXIMO = 1600
 const CALIDAD_JPEG = 0.82
 const LADO_AVATAR = 300
+const LADO_FOTO_VISITA = 1280
+const CALIDAD_FOTO_VISITA = 0.75
 
 export const ACEPTA_ARCHIVOS =
   'image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,application/pdf,.heic,.heif'
@@ -57,9 +59,9 @@ async function decodificar(blob: Blob): Promise<ImageBitmap> {
  * Reduce a 1600 px y pasa a JPEG. Si `autoRotar` y la imagen es vertical, la
  * gira 90° antihorario para que el formulario quede apaisado.
  */
-export async function comprimir(blob: Blob, autoRotar: boolean): Promise<Blob> {
+export async function comprimir(blob: Blob, autoRotar: boolean, lado = LADO_MAXIMO, calidad = CALIDAD_JPEG): Promise<Blob> {
   const img = await decodificar(blob)
-  const escala = Math.min(1, LADO_MAXIMO / Math.max(img.width, img.height))
+  const escala = Math.min(1, lado / Math.max(img.width, img.height))
   const w = Math.round(img.width * escala)
   const h = Math.round(img.height * escala)
   const rotar = autoRotar && h > w
@@ -74,7 +76,7 @@ export async function comprimir(blob: Blob, autoRotar: boolean): Promise<Blob> {
   }
   ctx.drawImage(img, 0, 0, w, h)
   img.close()
-  return canvasABlob(canvas)
+  return canvasABlob(canvas, calidad)
 }
 
 /** Gira 90° antihorario (el boton de rotar de la vista previa). */
@@ -128,6 +130,15 @@ export async function prepararArchivo(file: File): Promise<Pagina[]> {
   if (esPdf(file)) return pdfAPaginas(file)
   const fuente = esHeic(file) ? await heicAJpeg(file) : file
   return [{ blob: await comprimir(fuente, true), nombre: file.name }]
+}
+
+/**
+ * Foto suelta (informe de visita): no hay texto chico que leer como en un pedido, asi que
+ * se comprime mas (1280 px, JPEG 0.75: ~150-300 KB) y no se gira aunque sea vertical.
+ */
+export async function prepararFoto(file: File): Promise<Blob> {
+  if (file.size > TAMANO_MAXIMO) throw new Error('El archivo supera los 20 MB.')
+  return comprimir(esHeic(file) ? await heicAJpeg(file) : file, false, LADO_FOTO_VISITA, CALIDAD_FOTO_VISITA)
 }
 
 /** Recorte cuadrado centrado de 300 px, para el avatar. */

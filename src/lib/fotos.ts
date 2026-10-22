@@ -45,9 +45,12 @@ export function useUrlFoto(path: string | null | undefined): string | null {
   return url
 }
 
-/** Sube la foto ya comprimida. Devuelve la ruta a guardar en `pedidos.imagen_path`. */
-export async function subirFotoPedido(blob: Blob, usuarioId: string): Promise<string> {
-  const path = `${usuarioId}/${crypto.randomUUID()}.jpg`
+/**
+ * Sube la foto ya comprimida. Devuelve la ruta a guardar en `imagen_path`.
+ * Las de informes van a la carpeta `informes`, la unica donde puede subir un cobrador.
+ */
+export async function subirFotoPedido(blob: Blob, usuarioId: string, carpeta?: 'informes'): Promise<string> {
+  const path = `${usuarioId}/${carpeta ? `${carpeta}/` : ''}${crypto.randomUUID()}.jpg`
   const { error } = await supabase.storage
     .from('pedidos')
     .upload(path, blob, { contentType: 'image/jpeg' })

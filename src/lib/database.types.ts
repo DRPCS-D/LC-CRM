@@ -138,6 +138,8 @@ export interface Informe {
   /** La ubicacion no se edita nunca: es la prueba de la visita. */
   lat: number
   lng: number
+  /** Foto opcional de la visita (bucket `pedidos`, carpeta `<usuario>/informes/`). */
+  imagen_path: string | null
   usuario_id: string | null
   legacy_id: string | null
   legacy_usuario: string | null
