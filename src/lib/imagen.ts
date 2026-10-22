@@ -16,8 +16,8 @@ export const TAMANO_MAXIMO = 20 * 1024 * 1024
 const LADO_MAXIMO = 1600
 const CALIDAD_JPEG = 0.82
 const LADO_AVATAR = 300
-const LADO_FOTO_VISITA = 1280
-const CALIDAD_FOTO_VISITA = 0.75
+const LADO_FOTO_VISITA = 1600
+const CALIDAD_FOTO_VISITA = 0.82
 
 export const ACEPTA_ARCHIVOS =
   'image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,application/pdf,.heic,.heif'
@@ -133,8 +133,8 @@ export async function prepararArchivo(file: File): Promise<Pagina[]> {
 }
 
 /**
- * Foto suelta (informe de visita): no hay texto chico que leer como en un pedido, asi que
- * se comprime mas (1280 px, JPEG 0.75: ~150-300 KB) y no se gira aunque sea vertical.
+ * Foto suelta (informe de visita): misma compresion que la del pedido (1600 px, JPEG 0.82,
+ * ~300-500 KB) pero sin girar, aunque sea vertical.
  */
 export async function prepararFoto(file: File): Promise<Blob> {
   if (file.size > TAMANO_MAXIMO) throw new Error('El archivo supera los 20 MB.')
