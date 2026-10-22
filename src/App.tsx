@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import AppLayout from '@/components/layout/AppLayout'
+import RequiereAdmin from '@/components/layout/RequiereAdmin'
 import RequiereNoCobrador from '@/components/layout/RequiereNoCobrador'
 import RequiereVeTodo from '@/components/layout/RequiereVeTodo'
 import { Cargando } from '@/components/ui/estado'
@@ -8,6 +9,7 @@ import Clientes from '@/pages/Clientes'
 import Informes from '@/pages/Informes'
 import Inicio from '@/pages/Inicio'
 import Login from '@/pages/Login'
+import Muro from '@/pages/Muro'
 import NoEncontrado from '@/pages/NoEncontrado'
 import Pedidos from '@/pages/Pedidos'
 import Usuarios from '@/pages/Usuarios'
@@ -36,6 +38,9 @@ export default function App() {
         </Route>
         <Route path="clientes/*" element={<Clientes />} />
         <Route path="informes/*" element={<Informes />} />
+        <Route element={<RequiereAdmin />}>
+          <Route path="muro" element={<Muro />} />
+        </Route>
         <Route element={<RequiereVeTodo />}>
           <Route
             path="reportes"

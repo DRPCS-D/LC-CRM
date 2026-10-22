@@ -648,7 +648,7 @@ function InformeDetalleModal({
       .from('informes')
       .update({ cliente_id: cliente.id, comentario: comentario.trim() || null })
       .eq('id', informe.id)
-      .select('*, usuario:usuarios(username, nombre, foto_path)')
+      .select('*, usuario:usuarios!informes_usuario_id_fkey(username, nombre, foto_path)')
       .single()
     setProcesando(false)
     if (err) return setError(mensajeDeError(err, 'No se pudo guardar el informe.'))

@@ -146,6 +146,23 @@ export interface Informe {
   usuario: UsuarioResumen | null
 }
 
+/** Muro de informes (prueba, solo admin): me gusta y comentarios. */
+export interface InformeLike {
+  informe_id: string
+  usuario_id: string
+  created_at: string
+  usuario: UsuarioResumen | null
+}
+
+export interface InformeComentario {
+  id: string
+  informe_id: string
+  usuario_id: string
+  texto: string
+  created_at: string
+  usuario: UsuarioResumen | null
+}
+
 /** Quien cargo un pedido o informe, incluido el caso migrado sin cuenta. */
 export function autorDe(r: { usuario: UsuarioResumen | null; legacy_usuario: string | null }): string {
   return r.usuario?.username ?? r.legacy_usuario ?? '—'

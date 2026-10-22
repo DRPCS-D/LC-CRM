@@ -1,4 +1,4 @@
-import { BarChart3, FileText, Map, MapPin, User, Users } from 'lucide-react'
+import { BarChart3, FileText, Map, MapPin, Newspaper, User, Users } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
@@ -11,6 +11,8 @@ interface Modulo {
   icono: ComponentType<{ className?: string }>
   /** Solo admin y supervisor. */
   veTodo?: boolean
+  /** Solo admin (secciones de prueba). */
+  soloAdmin?: boolean
   /** Oculto para el cobrador. */
   sinCobrador?: boolean
 }
@@ -29,6 +31,7 @@ const MODULOS: Modulo[] = [
   { to: '/clientes/mapa', titulo: 'Mapa de clientes', icono: Map },
   { to: '/usuarios', titulo: 'Usuarios', icono: Users, veTodo: true },
   { to: '/reportes', titulo: 'Reportes', icono: BarChart3, veTodo: true },
+  { to: '/muro', titulo: 'Muro (prueba)', icono: Newspaper, soloAdmin: true },
 ]
 
 /**
@@ -56,9 +59,9 @@ function ResumenHoy({ conPedidos, equipo }: { conPedidos: boolean; equipo: boole
 }
 
 export default function Inicio() {
-  const { usuario, veTodo, esCobrador } = useAuth()
+  const { usuario, veTodo, esAdmin, esCobrador } = useAuth()
 
-  const modulos = MODULOS.filter((m) => (!m.veTodo || veTodo) && !(esCobrador && m.sinCobrador))
+  const modulos = MODULOS.filter((m) => (!m.veTodo || veTodo) && !(m.soloAdmin && !esAdmin) && !(esCobrador && m.sinCobrador))
   const primerNombre = usuario?.nombre?.split(' ')[0] ?? usuario?.username ?? ''
 
   return (

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { Cliente, Informe, Pedido } from '@/lib/database.types'
+import type { Cliente, Informe, InformeComentario, InformeLike, Pedido } from '@/lib/database.types'
 import { crearRecurso, traerTodo } from '@/lib/recurso'
 import { supabase } from '@/lib/supabase'
 
@@ -11,6 +11,8 @@ import { supabase } from '@/lib/supabase'
  */
 
 const USUARIO_EMBEBIDO = 'usuario:usuarios(username, nombre, foto_path, rol)'
+// informes tiene otro camino a usuarios (a traves de informe_likes), asi que hay que nombrar la FK.
+const USUARIO_DE_INFORME = 'usuario:usuarios!informes_usuario_id_fkey(username, nombre, foto_path, rol)'
 
 export const clientes = crearRecurso<Cliente>(
   () =>
@@ -38,12 +40,39 @@ export const informes = crearRecurso<Informe>(
     traerTodo((desde, hasta) =>
       supabase
         .from('informes')
-        .select(`*, ${USUARIO_EMBEBIDO}`)
+        .select(`*, ${USUARIO_DE_INFORME}`)
         .order('created_at', { ascending: false })
         .order('id')
         .range(desde, hasta)
     ),
   'No se pudieron cargar los informes.',
+)
+
+/** Muro de informes (prueba, solo admin): para el resto la RLS no devuelve nada. */
+export const informeLikes = crearRecurso<InformeLike>(
+  () =>
+    traerTodo((desde, hasta) =>
+      supabase
+        .from('informe_likes')
+        .select(`*, ${USUARIO_EMBEBIDO}`)
+        .order('created_at')
+        .order('informe_id')
+        .range(desde, hasta)
+    ),
+  'No se pudieron cargar los me gusta.',
+)
+
+export const informeComentarios = crearRecurso<InformeComentario>(
+  () =>
+    traerTodo((desde, hasta) =>
+      supabase
+        .from('informe_comentarios')
+        .select(`*, ${USUARIO_EMBEBIDO}`)
+        .order('created_at')
+        .order('id')
+        .range(desde, hasta)
+    ),
+  'No se pudieron cargar los comentarios.',
 )
 
 /**
@@ -80,6 +109,8 @@ export function usePedidosDeCliente(clienteId: string | null) {
 export const useClientes = clientes.useRecurso
 export const usePedidos = pedidos.useRecurso
 export const useInformes = informes.useRecurso
+export const useInformeLikes = informeLikes.useRecurso
+export const useInformeComentarios = informeComentarios.useRecurso
 
 /**
  * Traduce el error crudo de PostgREST a algo que se pueda mostrar. Los

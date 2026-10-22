@@ -5,6 +5,7 @@ import {
   KeyRound,
   LogOut,
   MapPinned,
+  Newspaper,
   Store,
   Users,
 } from 'lucide-react'
@@ -34,6 +35,7 @@ const NAV = [
   { to: '/clientes', abajo: false, label: 'Clientes', end: false, veTodo: false, sinCobrador: false, icono: Store },
   { to: '/reportes', abajo: false, label: 'Reportes', end: false, veTodo: true, sinCobrador: false, icono: BarChart3 },
   { to: '/usuarios', abajo: false, label: 'Usuarios', end: false, veTodo: true, sinCobrador: false, icono: Users },
+  { to: '/muro', abajo: false, label: 'Muro', end: false, veTodo: true, soloAdmin: true, sinCobrador: false, icono: Newspaper },
 ]
 
 const MENSAJE_PROBLEMA = {
@@ -48,12 +50,12 @@ const MENSAJE_PROBLEMA = {
 } as const
 
 export default function AppLayout() {
-  const { user, usuario, rol, veTodo, esCobrador, loading, problemaPerfil, signOut } = useAuth()
+  const { user, usuario, rol, veTodo, esAdmin, esCobrador, loading, problemaPerfil, signOut } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [modalPassword, setModalPassword] = useState(false)
 
-  const links = NAV.filter((item) => (!item.veTodo || veTodo) && !(esCobrador && item.sinCobrador))
+  const links = NAV.filter((item) => (!item.veTodo || veTodo) && !(item.soloAdmin && !esAdmin) && !(esCobrador && item.sinCobrador))
 
   useEffect(() => {
     if (!loading && !user) navigate('/login', { replace: true })
