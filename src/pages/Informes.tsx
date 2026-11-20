@@ -7,7 +7,6 @@ import {
   FilePlus2,
   FileText,
   Flame,
-  Images,
   ListFilter,
   Loader2,
   LocateFixed,
@@ -115,7 +114,6 @@ function NuevoInforme() {
   const [visor, setVisor] = useState(false)
   const [procesandoFoto, setProcesandoFoto] = useState(false)
   const camaraRef = useRef<HTMLInputElement>(null)
-  const galeriaRef = useRef<HTMLInputElement>(null)
   // La foto ya subida se reutiliza si hay que reintentar el guardado.
   const fotoSubida = useRef<{ blob: Blob; path: string } | null>(null)
   const clave = useRef(crypto.randomUUID())
@@ -256,7 +254,6 @@ function NuevoInforme() {
 
         <Field label="Foto (opcional)">
           <input ref={camaraRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => { cargarFoto(e.target.files?.[0]); e.target.value = '' }} />
-          <input ref={galeriaRef} type="file" accept="image/*" hidden onChange={(e) => { cargarFoto(e.target.files?.[0]); e.target.value = '' }} />
           {foto ? (
             <div className="relative overflow-hidden rounded-lg border border-border bg-muted">
               <button type="button" onClick={() => setVisor(true)} className="block w-full" aria-label="Ampliar foto">
@@ -267,14 +264,9 @@ function NuevoInforme() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <Button type="button" size="lg" disabled={procesandoFoto} onClick={() => camaraRef.current?.click()}>
-                {procesandoFoto ? <Loader2 className="animate-spin" /> : <Camera />} Cámara
-              </Button>
-              <Button type="button" size="lg" disabled={procesandoFoto} onClick={() => galeriaRef.current?.click()}>
-                <Images /> Galería
-              </Button>
-            </div>
+            <Button type="button" size="lg" className="w-full" disabled={procesandoFoto} onClick={() => camaraRef.current?.click()}>
+              {procesandoFoto ? <Loader2 className="animate-spin" /> : <Camera />} Cámara
+            </Button>
           )}
         </Field>
         <VisorImagen src={visor ? previewUrl : null} onCerrar={() => setVisor(false)} />
