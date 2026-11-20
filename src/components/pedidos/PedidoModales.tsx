@@ -120,8 +120,13 @@ export function PedidoDetalleModal({
           >
             {foto ? (
               <img src={foto} alt="Foto del pedido" className="size-full cursor-zoom-in object-contain" />
-            ) : (
+            ) : pedido.imagen_path ? (
               <ImageIcon className="size-8 text-muted-foreground" />
+            ) : (
+              <span className="flex flex-col items-center gap-2 px-4 text-center text-xs text-muted-foreground">
+                <ImageIcon className="size-8" />
+                Foto archivada fuera del sistema
+              </span>
             )}
           </button>
 
@@ -286,8 +291,13 @@ export function PedidoEditarModal({
           <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
             {fotoNueva || fotoActual ? (
               <img src={fotoNueva?.url ?? fotoActual ?? ''} alt="Foto del pedido" className="size-full object-contain" />
-            ) : (
+            ) : pedido?.imagen_path ? (
               <ImageIcon className="size-8 text-muted-foreground" />
+            ) : (
+              <span className="flex flex-col items-center gap-2 px-4 text-center text-xs text-muted-foreground">
+                <ImageIcon className="size-8" />
+                Foto archivada fuera del sistema
+              </span>
             )}
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
