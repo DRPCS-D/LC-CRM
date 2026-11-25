@@ -38,6 +38,7 @@ import {
   formatGs,
   formatMiles,
   formatMilesInput,
+  hoyLocal,
   marcaDeTiempo,
   normalizar,
   normalizarNroOrden,
@@ -454,6 +455,9 @@ interface Filtros {
   orden: Orden<CampoOrden>
 }
 
+const ANIO_ACTUAL = hoyLocal().slice(0, 4)
+
+// Arranca mostrando el año en curso (como Reportes); "Limpiar filtros" muestra todo el historial.
 const FILTROS_INICIALES: Filtros = {
   busqueda: '',
   clientes: [],
@@ -461,8 +465,8 @@ const FILTROS_INICIALES: Filtros = {
   usuarios: [],
   tipos: [],
   zonas: [],
-  desde: '',
-  hasta: '',
+  desde: `${ANIO_ACTUAL}-01-01`,
+  hasta: `${ANIO_ACTUAL}-12-31`,
   orden: { campo: 'fecha', dir: 'desc' },
 }
 
